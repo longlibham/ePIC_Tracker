@@ -1,0 +1,27 @@
+/run/verbose 2
+/run/initialize
+/vis/scene/create
+/vis/open OGL
+/vis/sceneHandler/create OGL
+/vis/sceneHandler/attach
+/vis/viewer/create ! ! 600
+/vis/viewer/refresh
+/vis/scene/notifyHandlers
+/vis/scene/add/trajectories smooth
+/tracking/storeTrajectory 2
+/vis/scene/notifyHandlers
+/vis/modeling/trajectories/create/drawByCharge
+/vis/modeling/trajectories/drawByCharge-0/set e- yellow
+/vis/scene/notifyHandlers scene-0
+/vis/modeling/trajectories/drawByCharge-0/set e+ yellow
+/vis/scene/notifyHandlers scene-0
+/vis/modeling/trajectories/drawByCharge-0/set gamma green
+/vis/scene/notifyHandlers scene-0
+/vis/modeling/trajectories/drawByCharge-0/default/setDrawStepPts true
+/vis/scene/notifyHandlers scene-0
+/vis/modeling/trajectories/drawByCharge-0/default/setStepPtsSize 2
+/vis/scene/notifyHandlers scene-0
+/vis/viewer/set/autoRefresh true
+/vis/viewer/refresh
+/vis/viewer/addCutawayPlane 0 0 0 m 1 0 0
+/vis/viewer/refresh
