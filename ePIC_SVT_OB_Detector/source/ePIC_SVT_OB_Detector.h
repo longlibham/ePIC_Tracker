@@ -23,11 +23,12 @@ class G4LogicalVolume;
 class G4VPhysicalVolume;
 class PHCompositeNode;
 class PHG4Subsystem;
+class PHParameters;
 
 class ePIC_SVT_OB_Detector : public PHG4Detector{
 	public:
 		// constructor
-		ePIC_SVT_OB_Detector(PHG4Subsystem* subsys, PHCompositeNode* Node, const std::string &dname);
+		ePIC_SVT_OB_Detector(PHG4Subsystem* subsys, PHCompositeNode* Node, PHParameters* parameters, const std::string &dname);
 		// destructor
 		virtual ~ePIC_SVT_OB_Detector(){}
 
