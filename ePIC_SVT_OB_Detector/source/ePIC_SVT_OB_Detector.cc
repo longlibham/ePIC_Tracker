@@ -1,3 +1,4 @@
+
 /*========================================================================
 *   Copyright (C) 2024 Univ. of Bham. All rights reserved.
 *   
@@ -35,7 +36,10 @@ class PHCompositeNode;
 
 using namespace std;
 
-ePIC_SVT_OB_Detector::ePIC_SVT_OB_Detector(PHG4Subsystem* subsys, PHCompositeNode* Node, const std::string &dname):PHG4Detector(subsys, Node, dname){
+ePIC_SVT_OB_Detector::ePIC_SVT_OB_Detector(PHG4Subsystem* subsys, PHCompositeNode* Node, PHParameters* parameters, const std::string &dname, const int lyr)
+	:PHG4Detector(subsys, Node, dname)
+	, m_Params(parameters)
+	, m_Layer(lyr){
 
 }
 
@@ -131,7 +135,6 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 					OverlapCheck()
 
 					);
-				m_PhysicalVolumesSet.insert(c_phy);	
 			}
 		}
 		

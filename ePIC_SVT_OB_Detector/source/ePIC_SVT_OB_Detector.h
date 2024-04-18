@@ -28,7 +28,7 @@ class PHParameters;
 class ePIC_SVT_OB_Detector : public PHG4Detector{
 	public:
 		// constructor
-		ePIC_SVT_OB_Detector(PHG4Subsystem* subsys, PHCompositeNode* Node, PHParameters* parameters, const std::string &dname);
+		ePIC_SVT_OB_Detector(PHG4Subsystem* subsys, PHCompositeNode* Node, PHParameters* parameters, const std::string &dname, const int layer = 0);
 		// destructor
 		virtual ~ePIC_SVT_OB_Detector(){}
 
@@ -40,10 +40,13 @@ class ePIC_SVT_OB_Detector : public PHG4Detector{
 
 		void SuperDetector(const std::string& name){m_SuperDetector = name;}
 		const std::string SuperDetector(){return m_SuperDetector;}
+		int get_Layer() const {return m_Layer;}
 
 	private:
+		PHParameters* m_Params;
 		std::set<G4VPhysicalVolume*> m_PhysicalVolumesSet;
 		std::string m_SuperDetector;
+		int m_Layer;
 };
 
 
