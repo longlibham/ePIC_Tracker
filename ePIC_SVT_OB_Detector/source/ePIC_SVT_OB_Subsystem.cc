@@ -41,7 +41,7 @@ ePIC_SVT_OB_Subsystem::ePIC_SVT_OB_Subsystem(const std::string& name, const int 
 		  InitializeParameters();
 }
 
-int ePIC_SVT_Subsystem::Init(PHCompositeNode* topNode){
+int ePIC_SVT_OB_Subsystem::InitRunSubsystem(PHCompositeNode* topNode){
 	
 	// use world material if material was not set so far
 	if(GetParams()->get_string_param("material") == "WorldMaterial"){
@@ -111,16 +111,16 @@ void ePIC_SVT_OB_Subsystem::SetDefaultParameters(){
 	set_default_double_param("place_x", 0.);
 	set_default_double_param("place_y", 0.);
 	set_default_double_param("place_z", 0.);
-	set_default_double_param("carbon_thickness", 0.)
-	set_default_double_param("carbon_length", 0.)
-	set_default_double_param("carbon_width", 0.)
-	set_default_double_param("si_thickness", 0.)
-	set_default_double_param("si_length", 0.)
-	set_default_double_param("si_width", 0.)
-	set_default_double_param("si_carbon_gap", 0.)
-	set_default_int_param("n_silicon_z", 0)
-	set_default_int_param("n_stave_phi", 0)
-	set_default_double_param("las_overlap", 0.)
+	set_default_double_param("carbon_thickness", 0.);
+	set_default_double_param("carbon_length", 0.);
+	set_default_double_param("carbon_width", 0.);
+	set_default_double_param("si_thickness", 0.);
+	set_default_double_param("si_length", 0.);
+	set_default_double_param("si_width", 0.);
+	set_default_double_param("si_carbon_gap", 0.);
+	set_default_int_param("n_silicon_z", 0);
+	set_default_int_param("n_stave_phi", 0);
+	set_default_double_param("las_overlap", 0.);
 
 
 	// place holder, will be replaced by world material if not set by other means(macro)

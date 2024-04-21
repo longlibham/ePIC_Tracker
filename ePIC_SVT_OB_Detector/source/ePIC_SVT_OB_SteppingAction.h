@@ -23,7 +23,7 @@ class G4Step;
 class G4VPhysicalVolume;
 class PHComporiteNode;
 class PHG4Hit;
-class PHitContainer;
+class PHG4HitContainer;
 class ePIC_SVT_OB_Detector;
 
 class ePIC_SVT_OB_SteppingAction : public PHG4SteppingAction{

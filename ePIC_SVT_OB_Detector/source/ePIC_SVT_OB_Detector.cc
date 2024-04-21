@@ -21,7 +21,7 @@
 #include <Geant4/G4LogicalVolume.hh>
 #include <Geant4/G4Material.hh>
 #include <Geant4/G4PVPlacement.hh>
-#include <Geant4/SystemOfUnits.hh>
+#include <Geant4/G4SystemOfUnits.hh>
 #include <Geant4/G4ThreeVector.hh>
 #include <Geant4/G4RotationMatrix.hh>
 #include <Geant4/G4Transform3D.hh>
@@ -30,6 +30,8 @@
 
 #include <cmath>
 #include <iostream>
+
+#include <TSystem.h>
 
 class G4VSolid;
 class PHCompositeNode;
@@ -43,8 +45,8 @@ ePIC_SVT_OB_Detector::ePIC_SVT_OB_Detector(PHG4Subsystem* subsys, PHCompositeNod
 
 }
 
-int ePIC_SVT_OB_Detector::IsInDetector(G4PhysicalVolume* volume) const{
-	set<PHG4PhysicalVolume*>::const_iterator iter = m_PhysicalVolumesSet.find(volume);
+int ePIC_SVT_OB_Detector::IsInDetector(G4VPhysicalVolume* volume) const{
+	set<G4VPhysicalVolume*>::const_iterator iter = m_PhysicalVolumesSet.find(volume);
 	if(iter != m_PhysicalVolumesSet.end()){
 		return 1;
 	}
@@ -112,7 +114,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	for(int i =0; i < nz; i++){ // loop LAS' in z direction
 		if(i == 0){   // place the carbon stave first
 			for(int j = 0; j < nphi; j++){
-				double phi = j*twopi/nphi;
+				double phi = j*2*M_PI/nphi;
 				G4RotationMatrix rotm = G4RotationMatrix();
 				rotm.rotateZ(phi);
 				G4ThreeVector uz = G4ThreeVector(std::cos(phi), std::sin(phi), 0.);
@@ -125,7 +127,8 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 				}
 				G4Transform3D transform = G4Transform3D(rotm, position);
 
-				G4VPhysicalVolume* c_phy = new G4PVPlacement(
+				//G4VPhysicalVolume* c_phy = 
+				new G4PVPlacement(
 					transform, // rotation, position
 					stave_logical,  // logical volume
 					"Carbon_stave",
@@ -140,7 +143,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 		
 		// place the LAS 
 		for(int j =0; j < nphi; j++){
-			double phi = j*twopi/nphi;
+			double phi = j*2*M_PI/nphi;
 			G4RotationMatrix rotm = G4RotationMatrix();
 			rotm.rotateZ(phi);
 			double pz = -c_l/2 + z_align + (0.5+i) * si_l - i * las_ol;
@@ -157,21 +160,21 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 			else{
 				r_eff = r_outer;
 			}
-			px = r_eff * std::cos(phi);
-			py = r_eff * std::sin(phi);
+			double px = r_eff * std::cos(phi);
+			double py = r_eff * std::sin(phi);
 
 			G4ThreeVector position = G4ThreeVector(px, py, pz);
 			G4Transform3D transform = G4Transform3D(rotm, position);
 
-			G4PhysicalVolume* si_phy = new G4PVPlacement(
+			G4VPhysicalVolume* si_phy = new G4PVPlacement(
 						transform,
 						las_logical,
-						"LAS"
+						"LAS",
 						0,
 						i*nphi +j,
 						OverlapCheck()
 					);
-			m_PhysicalVolumesSet.insert(phy);
+			m_PhysicalVolumesSet.insert(si_phy);
 
 		}
 

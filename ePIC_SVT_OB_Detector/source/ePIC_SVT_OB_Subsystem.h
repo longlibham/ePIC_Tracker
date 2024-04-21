@@ -16,6 +16,7 @@
 
 
 #include <g4main/PHG4Subsystem.h>
+#include <g4detectors/PHG4DetectorSubsystem.h>
 #include <string>
 
 using namespace std;
@@ -26,7 +27,7 @@ class ePIC_SVT_OB_Detector;
 class PHG4SteppingAction;
 
 
-class ePIC_SVT_OB_Subsystem : public PHG4Subsystem{
+class ePIC_SVT_OB_Subsystem : public PHG4DetectorSubsystem{
 	public:
 		// constructor
 		ePIC_SVT_OB_Subsystem(const std::string& name = "SVTOB", const int layer = 0);
@@ -38,12 +39,14 @@ class ePIC_SVT_OB_Subsystem : public PHG4Subsystem{
 		// creates the stepping action and place it on the node tree, under "ACTIONS" node
 		// creates relevant hit nodes that will be populated by the stepping action and stored in the output DST
 
-		virtual int Init(PHCompositeNode*);
+		int InitRunSubsystem(PHCompositeNode*) override;
 		virtual PHG4Detector* GetDetector() const;
 		virtual PHG4SteppingAction* GetSteppingAction() const {return m_SteppingAction;}
 
 		// Print info (from SubsysReco)
 		virtual void Print(const std::string& what = "ALL") const;
+
+		int process_event(PHCompositeNode*) override;
 
 	private:
 

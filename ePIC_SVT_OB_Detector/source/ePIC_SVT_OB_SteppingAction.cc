@@ -9,7 +9,7 @@
 =========================================================================*/
 
 #include <iostream>
-#include "ePIC_SVT_OB_SteepingAction.h"
+#include "ePIC_SVT_OB_SteppingAction.h"
 #include "ePIC_SVT_OB_Detector.h"
 #include <fstream>
 #include <sstream>
@@ -76,10 +76,10 @@ ePIC_SVT_OB_SteppingAction::~ePIC_SVT_OB_SteppingAction(){
 bool ePIC_SVT_OB_SteppingAction::UserSteppingAction(const G4Step* aStep, bool was_used){
 	
 	G4TouchableHandle touch = aStep->GetPreStepPoint()->GetTouchableHandle();
-	G4TouchableHandle touch_post = aStep->GetPostStepPoint()->GetTouchableHandle();
+	G4TouchableHandle touchpost = aStep->GetPostStepPoint()->GetTouchableHandle();
 
 	// get volume of the current step
-	G4PhysicalVolume* volume = touch->GetVolume();
+	G4VPhysicalVolume* volume = touch->GetVolume();
 	// IsInDetector(volume) returns
 	//  == 0 outside of the detector
 	//  > 0 for hits in active vulume
@@ -91,7 +91,7 @@ bool ePIC_SVT_OB_SteppingAction::UserSteppingAction(const G4Step* aStep, bool wa
 
 	//collect energy and track length step by step
 	G4double edep = aStep->GetTotalEnergyDeposit() / GeV;
-	g4double eion = (aStep->GetTotalEnergyDeposit() - aStep->GetNonIonizingEnergyDeposit()) / GeV;
+	G4double eion = (aStep->GetTotalEnergyDeposit() - aStep->GetNonIonizingEnergyDeposit()) / GeV;
 	const G4Track* aTrack = aStep->GetTrack();
 
 	int layer_id = m_Detector->get_Layer();
@@ -127,7 +127,7 @@ bool ePIC_SVT_OB_SteppingAction::UserSteppingAction(const G4Step* aStep, bool wa
 				cout << "last track: " << m_SaveTrackId
 					<< ", current trackid: " << aTrack->GetTrackID() <<endl;
 				cout << "phys pre vol: " << volume->GetName()
-					<< ", post vol: " << touchpost->GetVolume->GetName() << endl;
+					<< ", post vol: " << touchpost->GetVolume()->GetName() << endl;
 				cout << "previous phys pre vol: " << m_SaveVolPre -> GetName()
 					<< ", previous phys post vol: " << m_SaveVolPost ->GetName() << endl;
 			}
@@ -139,7 +139,7 @@ bool ePIC_SVT_OB_SteppingAction::UserSteppingAction(const G4Step* aStep, bool wa
 				m_Hit = new PHG4Hitv1();
 			}
 			
-			m_Hit->Set_layer(layer_id);
+			m_Hit->set_layer(layer_id);
 			// here we set the entrance values in cm
 			m_Hit->set_x(0, prePoint->GetPosition().x() / cm);
 			m_Hit->set_y(0, prePoint->GetPosition().y() / cm);
@@ -148,7 +148,7 @@ bool ePIC_SVT_OB_SteppingAction::UserSteppingAction(const G4Step* aStep, bool wa
 			// time in ns
 			m_Hit->set_t(0, prePoint->GetGlobalTime() / nanosecond);
 			// set the track id
-			m_Hit->set_trkid(aTrack->GetTrackID())
+			m_Hit->set_trkid(aTrack->GetTrackID());
 			m_SaveTrackId = aTrack->GetTrackID();
 
 			m_EdepSum = 0;
@@ -188,7 +188,7 @@ bool ePIC_SVT_OB_SteppingAction::UserSteppingAction(const G4Step* aStep, bool wa
 		cout << "last track: " << m_SaveTrackId
 			<< ", current trackid: " << aTrack->GetTrackID() <<endl;
 		cout << "phys pre vol: " << volume->GetName()
-			<< ", post vol: " << touchpost->GetVolume->GetName() << endl;
+			<< ", post vol: " << touchpost->GetVolume()->GetName() << endl;
 		cout << "previous phys pre vol: " << m_SaveVolPre -> GetName()
 			<< ", previous phys post vol: " << m_SaveVolPost ->GetName() << endl;
 		gSystem->Exit(1);
@@ -207,7 +207,7 @@ bool ePIC_SVT_OB_SteppingAction::UserSteppingAction(const G4Step* aStep, bool wa
 	}
 
 	m_SavePreStepStatus = prePoint->GetStepStatus();
-	m_SavePostStepStatus = postPoine->GetStepStatus();
+	m_SavePostStepStatus = postPoint->GetStepStatus();
 	m_SaveVolPre = volume;
 	m_SaveVolPost = touchpost->GetVolume();
 
@@ -263,7 +263,7 @@ bool ePIC_SVT_OB_SteppingAction::UserSteppingAction(const G4Step* aStep, bool wa
 				m_Hit->set_eion(m_EionSum);
 			}
 			
-			m_SaveHitContainer->AddHit(layer_id, m_Hit)
+			m_SaveHitContainer->AddHit(layer_id, m_Hit);
 			// ownership has been transferred to container, set to null
 			// so we will creat a new hit for the next track
 			m_Hit = nullptr;
