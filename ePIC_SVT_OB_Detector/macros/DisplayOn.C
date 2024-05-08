@@ -7,8 +7,8 @@
 *   	Description：	
 *
 =========================================================================*/
-#ifndef MACRO_DISPLAYON_C
-#define MACRO_DISPLAYON_C
+#ifndef FUN4ALL_ePIC_SVT_OB_DISPLAYON_C
+#define FUN4ALL_ePIC_SVT_OB_DISPLAYON_C
 
 #include <g4main/PHG4Reco.h>
 #include <fun4all/Fun4AllServer.h>
@@ -25,7 +25,7 @@ using namespace std;
 //
 PHG4Reco* QTGui(){
 	Fun4AllServer* se = Fun4AllServer::instance();
-	PHG4Reco* g4 = (PHG4Reco*) se->getSubsysReco("PHG4Reco");
+	PHG4Reco* g4 = (PHG4Reco*) se->getSubsysReco("PHG4RECO");
 	g4->InitRun(se->topNode());
 	g4->ApplyDisplayAction();
 	g4->StartGui();

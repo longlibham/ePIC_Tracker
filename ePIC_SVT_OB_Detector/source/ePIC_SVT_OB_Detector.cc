@@ -66,8 +66,8 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	double si_l = m_Params->get_double_param("si_length") * cm;
 	double si_w = m_Params->get_double_param("si_width") * cm;
 	double si_c_gap = m_Params->get_double_param("si_carbon_gap") * cm;
-	int  nz = m_Params->get_int_param("n_silicon_z") * cm;
-	int  nphi = m_Params->get_int_param("n_stave_phi") * cm;
+	int  nz = m_Params->get_int_param("n_silicon_z");
+	int  nphi = m_Params->get_int_param("n_stave_phi");
 	
 	// overlaps of LAS
 	double las_ol = m_Params->get_double_param("las_overlap") * cm;
@@ -116,7 +116,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 			for(int j = 0; j < nphi; j++){
 				double phi = j*2*M_PI/nphi;
 				G4RotationMatrix rotm = G4RotationMatrix();
-				rotm.rotateZ(phi);
+				rotm.rotateZ(M_PI/2. + phi);
 				G4ThreeVector uz = G4ThreeVector(std::cos(phi), std::sin(phi), 0.);
 				G4ThreeVector position = G4ThreeVector(0., 0., 0.);
 				if(j%2 == 0){
@@ -127,7 +127,8 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 				}
 				G4Transform3D transform = G4Transform3D(rotm, position);
 
-				//G4VPhysicalVolume* c_phy = 
+				
+//				G4VPhysicalVolume* c_phy = 
 				new G4PVPlacement(
 					transform, // rotation, position
 					stave_logical,  // logical volume
@@ -136,16 +137,16 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 					0,   // no boolean operation
 					j,   // copy number
 					OverlapCheck()
-
+					
 					);
+
 			}
 		}
-		
 		// place the LAS 
 		for(int j =0; j < nphi; j++){
 			double phi = j*2*M_PI/nphi;
 			G4RotationMatrix rotm = G4RotationMatrix();
-			rotm.rotateZ(phi);
+			rotm.rotateZ(M_PI/2. + phi);
 			double pz = -c_l/2 + z_align + (0.5+i) * si_l - i * las_ol;
 			double r_eff = 0.;
 			if(i%2 == 0 && j%2 == 0){
@@ -155,10 +156,10 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 				r_eff = r_outer + c_t + si_c_gap;
 			}
 			else if(i%2 == 1 && j%2 == 0){
-				r_eff = r_inner;
+				r_eff = r_inner - si_c_gap;
 			}
 			else{
-				r_eff = r_outer;
+				r_eff = r_outer - si_c_gap;
 			}
 			double px = r_eff * std::cos(phi);
 			double py = r_eff * std::sin(phi);
@@ -166,16 +167,19 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 			G4ThreeVector position = G4ThreeVector(px, py, pz);
 			G4Transform3D transform = G4Transform3D(rotm, position);
 
-			G4VPhysicalVolume* si_phy = new G4PVPlacement(
+			G4VPhysicalVolume* si_phy = 
+			new G4PVPlacement(
 						transform,
 						las_logical,
 						"LAS",
+						logicWorld,
 						0,
 						i*nphi +j,
 						OverlapCheck()
 					);
 			m_PhysicalVolumesSet.insert(si_phy);
 
+			cout<<"Process done copy NO."<<i*nphi+j<<endl;
 		}
 
 	}

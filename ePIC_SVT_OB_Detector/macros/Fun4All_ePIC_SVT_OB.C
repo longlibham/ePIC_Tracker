@@ -40,7 +40,7 @@ R__LOAD_LIBRARY(libg4detectors.so)
 R__LOAD_LIBRARY(libePIC_SVT_OB_Detector.so)
 R__LOAD_LIBRARY(libg4histos.so)
 
-void Fun4All_ePIC_SVT_OB(int nEvents = 1){
+void Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="FastTrackingEval.root", const string& outfile = ""){
 	////////////////////////////////////
 	//Make the server
 	///////////////////////////////////
@@ -63,7 +63,7 @@ void Fun4All_ePIC_SVT_OB(int nEvents = 1){
 	gen->set_eta_range(-0.8, 0.8);
 	gen->set_mom_range(10.0, 10.0);
 	//gen->set_z_range(0, 0);
-	gen->set_phi_range(0, TMath::Pi());
+	gen->set_phi_range(0, M_PI/2.);
 	se->registerSubsystem(gen);
 	
 	//
@@ -71,7 +71,7 @@ void Fun4All_ePIC_SVT_OB(int nEvents = 1){
 	//
 	
 	PHG4Reco* g4Reco = new PHG4Reco();
-	g4Reco->Set_field(1.7);  // Telsa
+	g4Reco->set_field(1.7);  // Telsa
 	g4Reco->save_DST_geometry(false);
 	// try non default physics lists
 	// g4Reco->SetPhysicsList("FTFP_BERT_HP")
@@ -79,11 +79,51 @@ void Fun4All_ePIC_SVT_OB(int nEvents = 1){
 	//
 	// build my SVT OB layers
 	//
-	
-	ePIC_SVT_OB_Subsystem* svt_ob = new ePIC_SVT_OB_Subsystem("SVT_OB_0", 0);
-	g4Reco->registerSubsystem(svt_ob);
+	// L3 OB
+	double r_inner[2] = {27.1, 41.8};
+	double r_outer[2] = {27.7, 42.4};
+	double carbon_thickness = 0.5*0.03;
+   	double carbon_length[2] = {54.31, 83.75};
+	double carbon_width = 3.92;
+	double si_thickness = 0.005;
+	double si_length[2] = {15.0529, 12.8880};
+	double si_width = 3.3128;
+	double si_carbon_gap = 0.5;
+	int n_silicon_z[2] = {4, 8};
+	int n_stave_phi[2] = {46, 70};
+	double las_overlap[2] = {2.55, 2.98};
+	const int ob_layers = 2;
+	for(int i = 0; i<ob_layers; i++){	
+		
+		ePIC_SVT_OB_Subsystem* svt_ob = new ePIC_SVT_OB_Subsystem("SVT_OB", i);
+		
+		// set the parameters
+		svt_ob->set_double_param("r_inner", r_inner[i]);
+		svt_ob->set_double_param("r_outer", r_outer[i]);
+		// carbon support 
+		svt_ob->set_double_param("carbon_thickness", carbon_thickness);
+		svt_ob->set_double_param("carbon_length", carbon_length[i]);
+		svt_ob->set_double_param("carbon_width", carbon_width);
+		// LAS geo 
+		svt_ob->set_double_param("si_thickness", si_thickness);
+		svt_ob->set_double_param("si_length", si_length[i]);
+		svt_ob->set_double_param("si_width", si_width);
+		svt_ob->set_double_param("si_carbon_gap", si_carbon_gap);
+		svt_ob->set_int_param("n_silicon_z", n_silicon_z[i]);
+		svt_ob->set_int_param("n_stave_phi", n_stave_phi[i]);
 
+		// overlaps of LAS
+		
+		svt_ob->set_double_param("las_overlap", las_overlap[i]);
+		
+		
+		g4Reco->registerSubsystem(svt_ob);
+	
+	}
 	se->registerSubsystem(g4Reco);
+
+	// Black hole swallows everything - prevent loopers from returning
+	// to inner detectors, length is given by default eta = +- 1.1 range
 
 
 	/////////////////////////////////////////
@@ -109,7 +149,7 @@ void Fun4All_ePIC_SVT_OB(int nEvents = 1){
 	}
 
 	se->run(nEvents);
-	svt_ob->Print();
+	//svt_ob->Print();
 	se->End();
 	cout<< "All Done!!!" <<endl;
 	delete se;
