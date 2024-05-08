@@ -33,22 +33,31 @@
 
 #include <phool/recoConsts.h>
 
+#include <g4detectors/PHG4CylinderSubsystem.h>
+
+#include <g4trackfastsim/PHG4TrackFastSim.h>
+#include <g4trackfastsim/PHG4TrackFastSimEval.h>
+
+#include <g4main/PHG4TruthSubsystem.h>
+
 using namespace std;
 
 R__LOAD_LIBRARY(libfun4all.so)
 R__LOAD_LIBRARY(libg4detectors.so)
 R__LOAD_LIBRARY(libePIC_SVT_OB_Detector.so)
 R__LOAD_LIBRARY(libg4histos.so)
+R__LOAD_LIBRARY(libg4trackfastsim.so)
 
-void Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="FastTrackingEval.root", const string& outfile = ""){
+int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="FastTrackingEval.root", const string& outfile = ""){
 	////////////////////////////////////
 	//Make the server
 	///////////////////////////////////
 	Fun4AllServer* se = Fun4AllServer::instance();
+	se->Verbosity(0);
 	recoConsts* rc = recoConsts::instance();
 	// if you want to fix the random seed to reproduce results
 	// set this flag
-	// nail this down so I know what the first event looks like...
+	// nail th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is down so I know what the first event looks like...
 	// 	rc->Set_IntFlag("RANDOMSEED", 12345);
 	
 
@@ -57,7 +66,7 @@ void Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="Fast
 	//
 	
 	//the PHG4ParticleGenerator makes cones using phi and eta 
-	PHG4ParticleGenerator* gen = new PHG4ParticleGenerator();
+	PHG4ParticleGenerator* gen = new PHG4ParticleGenerator("PGENERATOR");
 	gen->set_name("pi-");
 	gen->set_vtx(0, 0, 0);
 	gen->set_eta_range(-0.8, 0.8);
@@ -72,10 +81,13 @@ void Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="Fast
 	
 	PHG4Reco* g4Reco = new PHG4Reco();
 	g4Reco->set_field(1.7);  // Telsa
-	g4Reco->save_DST_geometry(false);
+	
+	//g4Reco->save_DST_geometry(false);
 	// try non default physics lists
 	// g4Reco->SetPhysicsList("FTFP_BERT_HP")
-	
+
+
+		
 	//
 	// build my SVT OB layers
 	//
@@ -95,7 +107,7 @@ void Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="Fast
 	const int ob_layers = 2;
 	for(int i = 0; i<ob_layers; i++){	
 		
-		ePIC_SVT_OB_Subsystem* svt_ob = new ePIC_SVT_OB_Subsystem("SVT_OB", i);
+		ePIC_SVT_OB_Subsystem* svt_ob = new ePIC_SVT_OB_Subsystem("SVTOB", i);
 		
 		// set the parameters
 		svt_ob->set_double_param("r_inner", r_inner[i]);
@@ -116,33 +128,98 @@ void Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="Fast
 		
 		svt_ob->set_double_param("las_overlap", las_overlap[i]);
 		
+		svt_ob->SetActive();
+		svt_ob->SuperDetector("SVTOB");
 		
 		g4Reco->registerSubsystem(svt_ob);
 	
 	}
-	se->registerSubsystem(g4Reco);
+	
+
+/*
+	  // for ePIC-SVT 5 layers of silicon
+	  double si_thickness[5] = {0.005, 0.005, 0.005, 0.025, 0.055};  // cm by default
+	  double svxrad[5] = {3.6, 4.8, 12.0, 27.0, 42.0};
+	  double length[5] = {27., 27., 27., 54., 84.};  // -1 use eta coverage to determine length
+	  PHG4CylinderSubsystem *cyl;
+	  // here is our silicon:
+	  for (int ilayer = 0; ilayer < 5; ilayer++)
+	  {
+		cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
+		cyl->set_double_param("radius", svxrad[ilayer]);
+		cyl->set_string_param("material", "G4_Si");  // Silicon (G4 definition)
+		cyl->set_double_param("thickness", si_thickness[ilayer]);
+		cyl->SetActive();
+		cyl->SuperDetector("SVTX");
+		if (length[ilayer] > 0)
+		{
+		  cyl->set_double_param("length", length[ilayer]);
+		}
+		g4Reco->registerSubsystem(cyl);
+	  }
+*/
 
 	// Black hole swallows everything - prevent loopers from returning
 	// to inner detectors, length is given by default eta = +- 1.1 range
+	PHG4CylinderSubsystem* cyl;
+	cyl = new PHG4CylinderSubsystem("BlackHole", 0);
+	cyl->set_double_param("radius", 50);
+	cyl->set_double_param("thickness", 0.1);
+	cyl->SetActive();
+	cyl->BlackHole();
+	g4Reco->registerSubsystem(cyl);
 
 
-	/////////////////////////////////////////
-	//Fun4All module
-	////////////////////////////////////////
-	
-	G4HitNtuple* hits = new G4HitNtuple("hits");
-	hits->AddNode("SVT_OB", 0);
-	se->registerSubsystem(hits);
+	PHG4TruthSubsystem* truth = new PHG4TruthSubsystem();
+	g4Reco->registerSubsystem(truth);
+
+	se->registerSubsystem(g4Reco);
+
+	//
+	//fast pattern recognition and full Kalman filter
+	//output evaluation file for truth track and reco tracks are PHG4TruthInfoContainer
+	//
+
+	PHG4TrackFastSim* kalman = new PHG4TrackFastSim("PHG4TrackFastSim");
+	kalman->set_use_vertex_in_fitting(false);
+	kalman->set_sub_top_node_name("SVTOB");
+	kalman->set_trackmap_out_name("SvtobTrackMap");
+
+	// add si tracker
+	kalman->add_phg4hits(
+			"G4HIT_SVTOB",					//const std::string& phg4hitsNames,
+			PHG4TrackFastSim::Cylinder, 	// const DETECTOR_TYPE phg4dettype,	Vertical_Plane/Cylinder
+			50e-4,							//radial-resolution [cm]
+			5e-4, 							//azimuthal-resolution [cm]
+			5e-4, 							//z-resolution [cm]
+			1, 								//efficiency
+			0 								//noise hits
+			);
+			
+	se->registerSubsystem(kalman);
 
 	///////////////////////////////////////
 	//IO managers
 	//////////////////////////////////////
-	
+	PHG4TrackFastSimEval* fast_sim_eval = new PHG4TrackFastSimEval("FastTrackingEval");
+	fast_sim_eval->set_filename(evalfile);
+	se->registerSubsystem(fast_sim_eval);
 
-	// this (dummy) input manager just drives the event loop
-	Fun4AllInputManager* in = new Fun4AllDummyInputManager("Dummy");
+	//
+	//output DST file for further offline analysis
+	//
+	if(!outfile.empty()){
+		Fun4AllOutputManager* out = new Fun4AllDstOutputManager("DSTOUT", outfile);
+		se->registerOutputManager(out);
+	}
+	Fun4AllInputManager* in = new Fun4AllDummyInputManager("JADE");
 	se->registerInputManager(in);
 
+
+	// this (dummy) input manager just drives the event loop
+//	Fun4AllInputManager* in = new Fun4AllDummyInputManager("Dummy");
+//	se->registerInputManager(in);
+	
 	// events = 0 => run forever
 	if (nEvents <= 0){
 		return 0;
@@ -155,6 +232,14 @@ void Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="Fast
 	delete se;
 	gSystem->Exit(0);
 
+	return 0;
+
+}
+
+PHG4ParticleGenerator* get_gen(const char* name="PGENERATOR"){
+	Fun4AllServer* se = Fun4AllServer::instance();
+	PHG4ParticleGenerator* pgun = (PHG4ParticleGenerator*) se->getSubsysReco(name);
+	return pgun;
 }
 
 #endif
