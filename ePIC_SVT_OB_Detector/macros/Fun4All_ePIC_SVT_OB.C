@@ -86,18 +86,41 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="FastT
 	// try non default physics lists
 	// g4Reco->SetPhysicsList("FTFP_BERT_HP")
 
-
+	//
+	//build SVT IB layers
+	//
+	const int ib_layers = 3;
+	double si_thickness = 0.005;  // cm by default
+	double svxrad[ib_layers] = {3.6, 4.8, 12.0};
+	double length[ib_layers] = {27., 27., 27.};  // -1 use eta coverage to determine length
+	PHG4CylinderSubsystem *cyl;
+	// here is our silicon:
+	for (int ilayer = 0; ilayer < ib_layers; ilayer++)
+	{
+		cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
+		cyl->set_double_param("radius", svxrad[ilayer]);
+		cyl->set_string_param("material", "G4_Si");  // Silicon (G4 definition)
+		cyl->set_double_param("thickness", si_thickness);
+		cyl->SetActive();
+		cyl->SuperDetector("SVTX");
+		if (length[ilayer] > 0)
+		{
+		  cyl->set_double_param("length", length[ilayer]);
+		}
+		g4Reco->registerSubsystem(cyl);
+	  }
 		
 	//
 	// build my SVT OB layers
 	//
-	// L3 OB
+	// L3/L4 OB
 	double r_inner[2] = {27.1, 41.8};
 	double r_outer[2] = {27.7, 42.4};
 	double carbon_thickness = 0.5*0.03;
    	double carbon_length[2] = {54.31, 83.75};
 	double carbon_width = 3.92;
-	double si_thickness = 0.005;
+	//double si_thickness = 0.005;
+	si_thickness = 0.005;
 	double si_length[2] = {15.0529, 12.8880};
 	double si_width = 3.3128;
 	double si_carbon_gap = 0.5;
@@ -105,9 +128,11 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="FastT
 	int n_stave_phi[2] = {46, 70};
 	double las_overlap[2] = {2.55, 2.98};
 	const int ob_layers = 2;
+	
+	ePIC_SVT_OB_Subsystem* svt_ob;
 	for(int i = 0; i<ob_layers; i++){	
 		
-		ePIC_SVT_OB_Subsystem* svt_ob = new ePIC_SVT_OB_Subsystem("SVTOB", i);
+		svt_ob = new ePIC_SVT_OB_Subsystem("SVTOB", i);
 		
 		// set the parameters
 		svt_ob->set_double_param("r_inner", r_inner[i]);
@@ -129,41 +154,19 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="FastT
 		svt_ob->set_double_param("las_overlap", las_overlap[i]);
 		
 		svt_ob->SetActive();
-		svt_ob->SuperDetector("SVTOB");
+//		svt_ob->SuperDetector("SVTOB");
 		
 		g4Reco->registerSubsystem(svt_ob);
 	
 	}
 	
 
-/*
-	  // for ePIC-SVT 5 layers of silicon
-	  double si_thickness[5] = {0.005, 0.005, 0.005, 0.025, 0.055};  // cm by default
-	  double svxrad[5] = {3.6, 4.8, 12.0, 27.0, 42.0};
-	  double length[5] = {27., 27., 27., 54., 84.};  // -1 use eta coverage to determine length
-	  PHG4CylinderSubsystem *cyl;
-	  // here is our silicon:
-	  for (int ilayer = 0; ilayer < 5; ilayer++)
-	  {
-		cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
-		cyl->set_double_param("radius", svxrad[ilayer]);
-		cyl->set_string_param("material", "G4_Si");  // Silicon (G4 definition)
-		cyl->set_double_param("thickness", si_thickness[ilayer]);
-		cyl->SetActive();
-		cyl->SuperDetector("SVTX");
-		if (length[ilayer] > 0)
-		{
-		  cyl->set_double_param("length", length[ilayer]);
-		}
-		g4Reco->registerSubsystem(cyl);
-	  }
-*/
 
 	// Black hole swallows everything - prevent loopers from returning
 	// to inner detectors, length is given by default eta = +- 1.1 range
-	PHG4CylinderSubsystem* cyl;
+//	PHG4CylinderSubsystem* cyl;
 	cyl = new PHG4CylinderSubsystem("BlackHole", 0);
-	cyl->set_double_param("radius", 50);
+	cyl->set_double_param("radius", 80);
 	cyl->set_double_param("thickness", 0.1);
 	cyl->SetActive();
 	cyl->BlackHole();
@@ -179,15 +182,18 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="FastT
 	//fast pattern recognition and full Kalman filter
 	//output evaluation file for truth track and reco tracks are PHG4TruthInfoContainer
 	//
-
+	
+	// SVT IB
 	PHG4TrackFastSim* kalman = new PHG4TrackFastSim("PHG4TrackFastSim");
+	kalman->Verbosity(0);
 	kalman->set_use_vertex_in_fitting(false);
-	kalman->set_sub_top_node_name("SVTOB");
-	kalman->set_trackmap_out_name("SvtobTrackMap");
-
-	// add si tracker
+	
+	kalman->set_sub_top_node_name("SVTX");
+	kalman->set_trackmap_out_name("SvtxTrackMap");
+	
+	
 	kalman->add_phg4hits(
-			"G4HIT_SVTOB",					//const std::string& phg4hitsNames,
+			"G4HIT_SVTX",					//const std::string& phg4hitsNames,
 			PHG4TrackFastSim::Cylinder, 	// const DETECTOR_TYPE phg4dettype,	Vertical_Plane/Cylinder
 			50e-4,							//radial-resolution [cm]
 			5e-4, 							//azimuthal-resolution [cm]
@@ -195,9 +201,38 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, const string& evalfile="FastT
 			1, 								//efficiency
 			0 								//noise hits
 			);
-			
-	se->registerSubsystem(kalman);
+	
+	// SVT OB
+	ostringstream oss;
+	// add si tracker
+	//PHG4TrackFastSim* kalman; //= new PHG4TrackFastSim("PHG4TrackFastSim");
+	for(int i = 0; i < ob_layers; i++){
+		//kalman = new PHG4TrackFastSim("PHG4TrackFastSim");
+		//kalman->set_use_vertex_in_fitting(false);
+		//oss.str("");
+		//oss<<"SVTOB_"<<i;
+		//kalman->set_sub_top_node_name(oss.str().c_str());
+		//oss.str("");
+		//oss<<"SvtobTrackMap_"<<i;
+		//kalman->set_trackmap_out_name(oss.str().c_str());
 
+		oss.str("");
+		oss<<"G4HIT_SVTOB_"<<i;
+		kalman->add_phg4hits(
+				oss.str().c_str(),					//const std::string& phg4hitsNames,
+				PHG4TrackFastSim::Cylinder, 	// const DETECTOR_TYPE phg4dettype,	Vertical_Plane/Cylinder
+				50e-4,							//radial-resolution [cm]
+				5e-4, 							//azimuthal-resolution [cm]
+				5e-4, 							//z-resolution [cm]
+				1, 								//efficiency
+				0 								//noise hits
+				);
+				
+
+	}
+	
+	se->registerSubsystem(kalman);
+	se->Print("NODETREE");	
 	///////////////////////////////////////
 	//IO managers
 	//////////////////////////////////////
