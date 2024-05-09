@@ -1,0 +1,139 @@
+# this is a python script
+
+#=======================================================================
+#   Copyright (C) 2024 Univ. of Bham  All rights reserved.
+#   
+#   		FileName：		FastTrackingPlot.py
+#   	 	Author：		LongLI <long.l@cern.ch>
+#   		Time：			2024.03.27
+#   		Description：
+#
+#======================================================================
+
+import ROOT
+import sys
+import os
+import argparse
+import math
+import numpy as np
+from array import array
+
+def read_tree(Tfile):
+    tree = Tfile.Get('tracks')
+
+    # load the tree
+
+    entries = tree.GetEntries()
+    np_px = np.zeros(entries)
+    np_py = np.zeros(entries)
+    np_pz = np.zeros(entries)
+    np_pcax = np.zeros(entries)
+    np_pcay = np.zeros(entries)
+    np_pcaz = np.zeros(entries)
+    np_gpx = np.zeros(entries)
+    np_gpy = np.zeros(entries)
+    np_gpz = np.zeros(entries)
+    np_gvx = np.zeros(entries)
+    np_gvy = np.zeros(entries)
+    np_gvz = np.zeros(entries)
+    for entry in range(entries):
+        tree.GetEntry(entry)
+        np_px[entry] = tree.px
+        np_py[entry] = tree.py
+        np_pz[entry] = tree.pz
+        np_pcax[entry] = tree.pcax
+        np_pcay[entry] = tree.pcay
+        np_pcaz[entry] = tree.pcaz
+        np_gpx[entry] = tree.gpx
+        np_gpy[entry] = tree.gpy
+        np_gpy[entry] = tree.gpy
+        np_gvx[entry] = tree.gvx
+        np_gvy[entry] = tree.gvy
+        np_gvy[entry] = tree.gvz
+    
+    Tfile.Close()    
+    dict_name = ['gpx', 'gpy', 'gpz', 'gvx', 'gvy', 'gvz', 
+                'px', 'py', 'pz', 'pcax', 'pcay', 'pcaz']
+    dict_value = [np_gpx, np_gpy, np_gpz, np_gvx, np_gvy, np_gvz,
+                np_px, np_py, np_pz, np_pcax, np_pcay, np_pcaz] 
+    return_dict = dict(zip(dict_name, dict_value))
+
+    return return_dict
+
+def process_tree(args):
+    pgen = array('d')
+    dp_mean = array('d')
+    dp_std = array('d')
+    dca_mean = array('d')
+    dca_std = array('d')
+    for i, each in enumerate(args.file_in):
+        f = ROOT.TFile(each,"READ")
+        tree_dict = read_tree(f)
+
+        p_num = float(each.split("_")[-1].split("G")[0])
+        pgen.append(p_num)
+
+        c1 = ROOT.TCanvas("c1", "c1", 1800, 600)
+        h1 = ROOT.TH1D("h1", "#DeltaP/P;#DeltaP/P;Entries/0.05",40, -1, 1)
+        h2 = ROOT.TH1D("h2", "DCA;DCA;Entries/0.001cm",100, -0.05, 0.05)
+        px, py, pz, gpx, gpy, gpz = tree_dict['px'], tree_dict['py'], tree_dict['pz'], tree_dict['gpx'], tree_dict['gpy'], tree_dict['gpz']
+        gvx, gvy, gvz, pcax, pcay, pcaz = tree_dict['gvx'], tree_dict['gvy'], tree_dict['gvz'], tree_dict['pcax'], tree_dict['pcay'], tree_dict['pcaz']
+        for index in range(len(px)):
+            if math.isnan(px[index]):
+                print("NaN, continue")
+                continue
+
+            dp = math.sqrt(px[index]**2+py[index]**2+pz[index]**2) - math.sqrt(gpx[index]**2 + gpy[index]**2 + gpz[index]**2)
+            gp = math.sqrt(gpx[index]**2 + gpy[index]**2 + gpz[index]**2)
+            h1.Fill(dp/gp)
+            if math.isnan(pcax[index]):
+                continue
+            dca = math.sqrt(pcax[index]**2 + pcay[index]**2 + pcaz[index]**2) - math.sqrt(gvx[index]**2 + gvy[index]**2 + gvz[index]**2)
+            h2.Fill(dca)
+
+        
+        c1.Divide(2,1)
+        c1.cd(1)
+        h1.Draw()
+        c1.cd(2)
+        h2.Draw()
+        outfile = each.replace(".root", ".pdf")
+        c1.Print(outfile)
+       
+        c1.Close()
+
+        dp_mean.append(h1.GetMean())
+        dp_std.append(h1.GetRMS()*100)
+        dca_mean.append(h2.GetMean()*10000)
+        dca_std.append(h2.GetRMS()*10000)
+
+
+    # prepare data for TGraphErrrors
+    num = len(pgen)
+    ge1 = ROOT.TGraph(num, pgen, dp_std)
+    ge2 = ROOT.TGraphErrors(num, pgen, dca_std)
+    
+    c2 = ROOT.TCanvas('c2', 'c2', 1800, 600)
+    c2.Divide(2,1)
+    c2.cd(1)
+    ge1.GetXaxis().SetTitle("P [GeV/c]")
+    ge1.GetYaxis().SetRangeUser(0, 20)
+    ge1.GetYaxis().SetTitle("#DeltaP/P [%]")
+    ge1.Draw("AP")
+    c2.cd(2)
+    ge2.GetXaxis().SetTitle("P [GeV/c]")
+    ge2.GetYaxis().SetTitle("DCA [#mum]")
+    ge1.GetYaxis().SetRangeUser(0, 50)
+    ge2.Draw("AP")
+    c2.Print("Summary_plot.pdf")
+
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Read data form FastTracking file and plotting")
+    parser.add_argument('file_in', nargs='+', help="input file names")
+
+    args = parser.parse_args()
+
+    process_tree(args)
+
