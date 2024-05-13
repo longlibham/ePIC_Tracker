@@ -34,11 +34,24 @@ class Trigaus:
 
 def read_tree(Tfile, outfile):
     tree = Tfile.Get('tracks')
+    
+    # fixed pt or fixed p
+    fixed = outfile.split('/')[-2].split('_')[-1]
 
+    gp = int(outfile.split('-')[-1].split('G')[0]) 
+    bins = gp*200
     # load the tree
-    c1 = ROOT.TCanvas("c1", "c1", 1800, 600)
-    h1 = ROOT.TH1D("h1d", "#DeltaP/P;#DeltaP/P;Entries/0.01", 100, 0.5, 0.5)
-    h2 = ROOT.TH1D("h2", "DCA;#DCA;Entries/0.001cm", 100, 0.05, 0.05)
+    c1 = ROOT.TCanvas("c1", "c1", 1800, 1200)
+    ptitle = ''
+    if fixed == 'p':
+        ptitle = fixed
+    elif fixed == 'pT':
+        ptitle = 'p_{T}'
+    
+    title = '#Delta%s/%s;#Delta%s/%s;Entries/%d' %(ptitle, ptitle, ptitle, ptitle, round(0.2/bins, 5))     
+    h1 = ROOT.TH1D("h1", title, bins, 0.1, 0.1)
+    h3 = ROOT.TH1D("h3", "DCA_{T};DCA_{T};Entries/0.001cm", 100, 0.05, 0.05)
+    h4 = ROOT.TH1D("h4", "DCA_{Z};DCA_{Z};Entries/0.001cm", 100, 0.05, 0.05)
 
     entries = tree.GetEntries()
     np_px = np.zeros(entries)
@@ -59,15 +72,26 @@ def read_tree(Tfile, outfile):
         tree.GetEntry(entry)
         if math.isnan(tree.px):
             continue
-        h1.Fill((math.sqrt(tree.px**2+tree.py**2+tree.pz**2)- math.sqrt(tree.gpx**2+tree.gpy**2+tree.gpz**2))/math.sqrt(tree.gpx**2+tree.gpy**2+tree.gpz**2))
-        h2.Fill(math.sqrt(tree.pcax**2+tree.pcay**2+tree.pcaz**2) - math.sqrt(tree.gvx**2+tree.gvy**2+tree.gvz**2))
+        denumerator = 0
+        if fixed == 'p': 
+            denumerator = math.sqrt(tree.gpx**2 + tree.gpy**2 + tree.gpz**2)
+        elif fixed == 'pT': 
+            denumerator = math.sqrt(tree.gpz**2 + tree.gpy**2)
+        else:
+            print('please choose the right data fixp/fixpt!') 
+            exit(-1)
+        h1.Fill((math.sqrt(tree.px**2+tree.py**2)- math.sqrt(tree.gpx**2+tree.gpy**2))/denumerator)
+        h3.Fill(tree.dca2d)
+        h4.Fill(tree.pcaz - tree.gvz)
 
-    c1.Divide(2, 1)
+    c1.Divide(2, 2)
     c1.cd(1)
-    h1.Fit('gaus','', '', -0.1, 0.1)
+    frp_p = h1.Fit('gaus','S', '', h1.GetMean()-h1.GetRMS(), h1.GetMean()+h1.GetRMS())
+    h1.GetXaxis().SetRangeUser(-0.1, 0.1)
     h1.Draw()
-    c1.cd(2)
-    
+    c1.cd(3)
+   
+    ''' 
     #bigaus = Bigaus()
     trigaus = Trigaus()
     #fit_dca = ROOT.TF1("fit_dca", bigaus, -0.02, 0.02, 6)
@@ -99,52 +123,86 @@ def read_tree(Tfile, outfile):
     fit_dca.SetParameter(8, 0.002)
     fit_dca.SetParName(8, "#sigma3")
     fit_dca.SetParLimits(8, 0.0002, 0.02)
+    '''
 
-    h2.Fit("fit_dca", 'S', '', -0.01, 0.01)
-    h2.Draw()
+    #h2.Fit("fit_dca", 'S', '', h2.GetMean()-h2.GetRMS(), h2.GetMean+h2.GetRMS())
+    frp_dcat = h3.Fit("gaus", 'S', '', h3.GetMean()-2*h3.GetRMS(), h3.GetMean()+2*h3.GetRMS())
+    h3.Draw()
+    c1.cd(4)
+    frp_dcaz = h4.Fit("gaus", 'S', '', h4.GetMean()- h4.GetRMS(), h4.GetMean()+ h4.GetRMS())
+    h4.Draw()
     c1.Print(outfile.replace(".root", ".pdf"))
 
-    dp_mean, dp_std, dca_mean, dca_std = h1.GetMean()*100, h1.GetRMS()*100, h2.GetMean()*10000, h2.GetRMS()*10000 # unit %, um
+    dp_mean, dp_std = frp_p.Parameter(1)*100, frp_p.Parameter(2)*100
+    dcat_mean, dcat_std, dcaz_mean, dcaz_std = frp_dcat.Parameter(1)*10000, frp_dcat.Parameter(2)*10000, frp_dcaz.Parameter(1)*10000, frp_dcaz.Parameter(2)*10000 # unit %, um
 
     Tfile.Close()
-    return dp_mean, dp_std, dca_mean, dca_std
+    return dp_mean, dp_std, dcat_mean, dcat_std, dcaz_mean, dcaz_std
 
 def process_tree(args):
     pgen = array('d')
     dp_mean = array('d')
     dp_std = array('d')
-    dca_mean = array('d')
-    dca_std = array('d')
+    dcat_mean = array('d')
+    dcat_std = array('d')
+    dcaz_mean = array('d')
+    dcaz_std = array('d')
+    # p/pt fixed
+    fixed = ''
     for i, each in enumerate(args.file_in):
         f = ROOT.TFile(each,"READ")
-        p_m, p_s, dca_m, dca_s = read_tree(f, each)
+        p_m, p_s, dcat_m, dcat_s, dcaz_m, dcaz_s = read_tree(f, each)
         dp_mean.append(p_m)
         dp_std.append(p_s)
-        dca_mean.append(dca_m)
-        dca_std.append(dca_s)
+        dcat_mean.append(dcat_m)
+        dcat_std.append(dcat_s)
+        dcaz_mean.append(dcaz_m)
+        dcaz_std.append(dcaz_s)
 
-        p_num = float(each.split("_")[-1].split("G")[0])
+        p_num = float(each.split("_")[-1].split("G")[0].split("-")[0])
         pgen.append(p_num)
-
+        fixed = each.split('/')[-2].split('_')[-1]
 
     # prepare data for TGraphErrrors
     num = len(pgen)
+    print(dcat_std)
     ge1 = ROOT.TGraph(num, pgen, dp_std)
-    ge2 = ROOT.TGraphErrors(num, pgen, dca_std)
+    ge3 = ROOT.TGraph(num, pgen, dcat_std)
+    ge4 = ROOT.TGraph(num, pgen, dcaz_std)
     
-    c2 = ROOT.TCanvas('c2', 'c2', 1800, 600)
-    c2.Divide(2,1)
+    c2 = ROOT.TCanvas('c2', 'c2', 1800, 1200)
+    c2.Divide(2,2)
     c2.cd(1)
-    ge1.GetXaxis().SetTitle("P [GeV/c]")
-    ge1.GetYaxis().SetRangeUser(0, 5)
-    ge1.GetYaxis().SetTitle("#DeltaP/P [%]")
+
+
+    ptitle = ''
+    if fixed == 'p':
+        ptitle = 'p'
+    elif fixed == 'pT':
+        ptitle = 'p_{T}'
+
+
+    xtitle = '%s [GeV/c]' % ptitle
+    ytitle = '#Delta%s/%s ' %(ptitle, ptitle)
+    ytitle += '[%]'    
+    ge1.GetXaxis().SetTitle(xtitle)
+    ge1.GetYaxis().SetRangeUser(0, 2.5)
+    ge1.GetYaxis().SetTitle(ytitle)
     ge1.Draw("AP")
-    c2.cd(2)
-    ge2.GetXaxis().SetTitle("P [GeV/c]")
-    ge2.GetYaxis().SetTitle("DCA [#mum]")
-    ge2.GetYaxis().SetRangeUser(0, 50)
-    ge2.Draw("AP")
-    c2.Print("Summary_plot.pdf")
+    
+
+    c2.cd(3)
+    ge3.GetXaxis().SetTitle(xtitle)
+    ge3.GetYaxis().SetTitle("DCA_{T} [#mum]")
+    ge3.GetYaxis().SetRangeUser(0, 50)
+    ge3.Draw("AP")
+
+    c2.cd(4)
+    ge4.GetXaxis().SetTitle(xtitle)
+    ge4.GetYaxis().SetTitle("DCA_{Z} [#mum]")
+    ge4.GetYaxis().SetRangeUser(0, 50)
+    ge4.Draw("AP")
+    c2.Print(f"plots/Summary_plot_{fixed}.pdf")
 
 
 
