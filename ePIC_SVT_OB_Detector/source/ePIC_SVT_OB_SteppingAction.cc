@@ -108,9 +108,12 @@ bool ePIC_SVT_OB_SteppingAction::UserSteppingAction(const G4Step* aStep, bool wa
 	G4StepPoint* prePoint = aStep->GetPreStepPoint();
 	G4StepPoint* postPoint = aStep->GetPostStepPoint();
 	// loggle info
-	cout<< "TRACK id: " << aTrack->GetTrackID() << endl;
-	cout<< "time prepoint: " << prePoint->GetGlobalTime() << endl;
-	cout<< "time postpoint: " << postPoint->GetGlobalTime() << endl;
+//	cout<< "TRACK id: " << aTrack->GetTrackID() << endl;
+//	cout<< "time prepoint: " << prePoint->GetGlobalTime() << endl;
+//	cout<< "time postpoint: " << postPoint->GetGlobalTime() << endl;
+
+//	cout<<"pre physical vol: "<<volume->GetName();
+//	cout<<"post physical vol: "<<touchpost->GetVolume()->GetName()<<endl;
 
 	switch (prePoint -> GetStepStatus()){
 		case fPostStepDoItProc:

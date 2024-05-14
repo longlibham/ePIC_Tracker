@@ -194,13 +194,13 @@ def process_tree(args):
     c2.cd(3)
     ge3.GetXaxis().SetTitle(xtitle)
     ge3.GetYaxis().SetTitle("DCA_{T} [#mum]")
-    ge3.GetYaxis().SetRangeUser(0, 50)
+    ge3.GetYaxis().SetRangeUser(0, 100)
     ge3.Draw("AP")
 
     c2.cd(4)
     ge4.GetXaxis().SetTitle(xtitle)
     ge4.GetYaxis().SetTitle("DCA_{Z} [#mum]")
-    ge4.GetYaxis().SetRangeUser(0, 50)
+    ge4.GetYaxis().SetRangeUser(0, 100)
     ge4.Draw("AP")
     c2.Print(f"plots/Summary_plot_{fixed}.pdf")
 
