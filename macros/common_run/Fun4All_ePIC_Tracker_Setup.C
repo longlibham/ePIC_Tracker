@@ -77,6 +77,7 @@ void ePICSetup(){
 	
 	Fun4AllServer* se = Fun4AllServer::instance();
 	PHG4Reco* g4Reco = new PHG4Reco();
+	g4Reco->set_field(1.7); //Telsa
 	WorldInit(g4Reco);
 
 	//g4Reco->set_rapidity_coverage(1.1);

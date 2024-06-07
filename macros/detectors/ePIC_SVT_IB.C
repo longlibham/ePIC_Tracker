@@ -101,6 +101,7 @@ double ePIC_SVT_IB(PHG4Reco* g4Reco, const int nlayers = 3, double radius = 0){
     	if (length[ilayer] > 0){
       		cyl->set_double_param("length", length[ilayer]);
     	}
+		
 		cyl->OverlapCheck(OverlapCheck);
     	g4Reco->registerSubsystem(cyl);
 

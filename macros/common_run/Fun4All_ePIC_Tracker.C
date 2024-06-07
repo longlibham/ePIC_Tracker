@@ -18,10 +18,22 @@
 #include "../detectors/Fun4All_particle_generator.C"
 #include <G4_Input.C>
 #include <TROOT.h>
+#include <TError.h>
 
 #include <fun4all/Fun4AllServer.h>
 #include <phool/recoConsts.h>
 #include <RooUnblindPrecision.h>
+
+#include <g4main/PHG4Reco.h>
+#include <g4main/PHG4SimpleEventGenerator.h>
+#include <fun4all/Fun4AllDstOutputManager.h>
+#include <fun4all/Fun4AllDummyInputManager.h>
+#include <fun4all/Fun4AllInputManager.h>
+#include <fun4all/Fun4AllOutputManager.h>
+#include <fun4all/SubsysReco.h>
+#include <g4trackfastsim/PHG4TrackFastSim.h>
+#include <g4trackfastsim/PHG4TrackFastSimEval.h>
+#include <g4main/PHG4TruthSubsystem.h>
 
 #include <iostream>
 #include <fstream>
@@ -29,6 +41,8 @@
 
 R__LOAD_LIBRARY(libfun4all.so)
 using namespace std;
+
+
 
 int Fun4All_ePIC_Tracker(
     const int nEvents = 10000,
@@ -80,9 +94,6 @@ int Fun4All_ePIC_Tracker(
 	//Geant4 setup
 	//
 	
-	PHG4Reco* g4Reco = new PHG4Reco();
-	g4Reco->set_field(1.7);  // Telsa
-
     //enable beam pipe
 
     //enable SVT_IB
@@ -100,7 +111,7 @@ int Fun4All_ePIC_Tracker(
     Enable::TRACKING_EVAL = Enable::TRACKING && true;
     G4TRACKING::DISPLACED_VERTEX = true; // this option exclude vertex in the track fitting and use RAVE to reconstruct primary and 2
                                         //projections to calorimeters
-    
+    Enable::DISPLAY = true;
 
 
     //Initialsize the selected sybsystems
@@ -114,7 +125,9 @@ int Fun4All_ePIC_Tracker(
     // Tracking and PID
     //
 
+
     if(Enable::TRACKING) Tracking_Reco();
+    
     ostringstream oss;
     oss.str("");
 	if(Enable::USE_PT)
@@ -132,25 +145,13 @@ int Fun4All_ePIC_Tracker(
     //
     // Set up Input Managers
     InputManagers();
-
     //
     // Event processing
     //
 
-    if(Enable::DISPLAY){
-        DisplayOn();
-        gROOT->ProcessLine("Fun4AllServer* se = Fun4AllServer::instance();");
-        gROOT->ProcessLine("PHG4Reco* g4 = (PHG4Reco*) se->getSubsysReco(\"PHG4RECO\");");
-
-        cout<<"------------------------------------------------------------------------"<<endl;
-        cout<<"You are in event display mode. Run one event with"<<endl;
-        cout<<"se->run(1)"<<endl;
-        cout<<"Run Geant4 command with following examples"<<endl;
-        gROOT->ProcessLine("displaycmd()");
-        return 0;
-
-    }
-
+    cout<<"######################################### ready to print NODE TREE##############################################"<<endl;
+    se->Print("NODETREE");
+    cout<<"#########################################NODE TREE printed##############################################"<<endl;
     if(nEvents < 0){
         return 0;
     }
@@ -164,6 +165,7 @@ int Fun4All_ePIC_Tracker(
     }
     se->skip(skip);
     se->run(nEvents);
+    cout<<"####################################RUN DONE!#################################"<<endl;
 
     //
     // Exit
@@ -176,5 +178,11 @@ int Fun4All_ePIC_Tracker(
 
     gSystem->Exit(0);
     return 0;
+}
+
+PHG4ParticleGenerator* get_gen(const char* name="PGENERATOR"){
+	Fun4AllServer* se = Fun4AllServer::instance();
+	PHG4ParticleGenerator* pgun = (PHG4ParticleGenerator*) se->getSubsysReco(name);
+	return pgun;
 }
 #endif

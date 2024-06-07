@@ -47,7 +47,7 @@ void BlackHole(PHG4Reco* g4Reco, double radius){
     blackhole->set_double_param("thickness", BlackHoleGeometry::gap/2.);  // it needs some thickness
 
     if(BlackHoleGeometry::visible){
-        blackhole->set_color(1, 0, 0, 0.7);
+        blackhole->set_color(1, 1, 1, 0.5);
     }
     blackhole->BlackHole();
     if(Enable::BLACKHOLE_SAVEHITS){
@@ -73,7 +73,7 @@ void BlackHole(PHG4Reco* g4Reco, double radius){
     blackhole->set_double_param("length", BlackHoleGeometry::gap/2.);
     blackhole->set_double_param("place_z",blackhole_forward_zpos);
     if(BlackHoleGeometry::visible){
-        blackhole->set_color(1, 0, 0, 0.7);
+        blackhole->set_color(1, 1, 1, 0.5);
     }
     blackhole->BlackHole();
     if(Enable::BLACKHOLE_SAVEHITS && Enable::BLACKHOLE_FORWARD_SAVEHITS){
@@ -91,7 +91,7 @@ void BlackHole(PHG4Reco* g4Reco, double radius){
     blackhole->set_double_param("length", BlackHoleGeometry::gap/2.);
     blackhole->set_double_param("place_z",blackhole_backward_zpos);
     if(BlackHoleGeometry::visible){
-        blackhole->set_color(1, 0, 0, 0.7);
+        blackhole->set_color(1, 1, 1, 0.5);
     }
     blackhole->BlackHole();
     if(Enable::BLACKHOLE_SAVEHITS && Enable::BLACKHOLE_FORWARD_SAVEHITS){
