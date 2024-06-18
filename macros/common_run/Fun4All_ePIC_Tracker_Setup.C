@@ -92,8 +92,7 @@ void ePICSetup(){
 
 	// SVT IB layers
 	if(Enable::ePIC_SVTIB) radius = ePIC_SVT_IB(g4Reco, 5, radius);
-
-
+	
 	//BlackHole if enabled, needs infor from all previus sub detectors for dimensions
 	if(Enable::BLACKHOLE) BlackHole(g4Reco, radius);
 

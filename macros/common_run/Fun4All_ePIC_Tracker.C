@@ -112,6 +112,7 @@ int Fun4All_ePIC_Tracker(
     G4TRACKING::DISPLACED_VERTEX = true; // this option exclude vertex in the track fitting and use RAVE to reconstruct primary and 2
                                         //projections to calorimeters
     Enable::DISPLAY = true;
+    Enable::DSTOUT = true;
 
 
     //Initialsize the selected sybsystems
@@ -137,21 +138,22 @@ int Fun4All_ePIC_Tracker(
 
     if(Enable::TRACKING_EVAL) Tracking_Eval(oss.str().c_str());
 
+    //
+    // Set up Input Managers
+    InputManagers();
+    //
+
     if(!outfile.empty() && Enable::DSTOUT){
         Fun4AllOutputManager* out = new Fun4AllDstOutputManager("DSTOUT", outfile);
 		se->registerOutputManager(out);
     }
 
     //
-    // Set up Input Managers
-    InputManagers();
-    //
     // Event processing
     //
 
-    cout<<"######################################### ready to print NODE TREE##############################################"<<endl;
     se->Print("NODETREE");
-    cout<<"#########################################NODE TREE printed##############################################"<<endl;
+    
     if(nEvents < 0){
         return 0;
     }

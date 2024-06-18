@@ -33,6 +33,7 @@ namespace Enable{
 
 namespace TRACKING{
 	//string TrackNodeName = "TrackMap";
+	string TrackTopName = "SVTX";
 	PHG4TrackFastSim* FastKalmanFilter(nullptr);
 	PHG4TrackFastSim* FastKalmanFilterSiliconTrack(nullptr);
 	PHG4TrackFastSim* FastKalmanFilterInnerTrack(nullptr);
@@ -94,6 +95,7 @@ void Tracking_Reco(){
 
 	InitFastKalmanFilter(TRACKING::FastKalmanFilter);
 	TRACKING::FastKalmanFilter->Verbosity(verbosity);
+	TRACKING::FastKalmanFilter->set_sub_top_node_name(TRACKING::TrackTopName);
 	TRACKING::FastKalmanFilter->set_trackmap_out_name(TRACKING::TrackNodeName);
 
 	se->registerSubsystem(TRACKING::FastKalmanFilter);

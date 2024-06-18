@@ -69,7 +69,7 @@ void SVTIBFastKalmanFilterConfigSVTX(PHG4TrackFastSim* kalman_filter, int ilay, 
 
 
 double ePIC_SVT_IB(PHG4Reco* g4Reco, const int nlayers = 3, double radius = 0){
-	
+
 	if (nlayers > 5){
 		cout<<"Silicon VTX layers should not exceed 5!"<<endl;
 		exit(1);
@@ -80,7 +80,7 @@ double ePIC_SVT_IB(PHG4Reco* g4Reco, const int nlayers = 3, double radius = 0){
 	PHG4CylinderSubsystem* cyl(nullptr);
 
 	// for ePIC-SVT 5 layers of silicon
-  	double si_mat[5] = {0.05, 0.05, 0.05, 0.25, 0.55};  // cm by default
+  	double si_mat[5] = {0.05, 0.05, 0.05, 0.25, 0.55}; 
   	double svxrad[5] = {3.6, 4.8, 12.0, 27.0, 42.0};
   	double length[5] = {27., 27., 27., 54., 84.};  // -1 use eta coverage to determine length
 	if(svxrad[0] <= radius){
@@ -105,7 +105,7 @@ double ePIC_SVT_IB(PHG4Reco* g4Reco, const int nlayers = 3, double radius = 0){
 		cyl->OverlapCheck(OverlapCheck);
     	g4Reco->registerSubsystem(cyl);
 
-		SVTIBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilter, ilayer, svxrad[ilayer], true);
+		SVTIBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilter, ilayer, svxrad[ilayer], false);//true);
 		SVTIBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterInnerTrack, ilayer, svxrad[ilayer], false);
 		SVTIBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterSiliconTrack, ilayer, svxrad[ilayer], false);
 	
