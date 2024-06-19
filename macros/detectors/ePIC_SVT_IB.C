@@ -26,7 +26,6 @@
 #include <fun4all/SubsysReco.h>
 
 #include "ePIC_Tracking.C"
-#include "ePIC_SVT_IB.C"
 #include "GlobalVariables.C"
 
 #include <phool/recoConsts.h>
@@ -54,16 +53,16 @@ void ePIC_SVTIB_Init(){
 void SVTIBFastKalmanFilterConfigSVTX(PHG4TrackFastSim* kalman_filter, int ilay, double radius, bool addproj){
 
 	kalman_filter->add_phg4hits(
-			Form("G4HIT_SVTX_%d", ilay),
+			Form("G4HIT_SVTXIB_%d", ilay),
 			PHG4TrackFastSim::Cylinder,
 			50./10000., //radial-resolution [cm]
-			10./10000./sqrt(12.), // azimuthal-resolution [cm]
-			10./10000./sqrt(12.), // z-resolution [cm]
+			20./10000./sqrt(12.), // azimuthal-resolution [cm]
+			20./10000./sqrt(12.), // z-resolution [cm]
 			1,   //efficiency
 			0    // noise
 			);
-	kalman_filter->add_cylinder_state(Form("SVTX_%d", ilay), radius);
-	if(addproj)TRACKING::ProjectionNames.insert(Form("SVTX_%d", ilay));
+	kalman_filter->add_cylinder_state(Form("SVTXIB_%d", ilay), radius);
+	if(addproj)TRACKING::ProjectionNames.insert(Form("SVTXIB_%d", ilay));
 
 }
 
@@ -91,7 +90,7 @@ double ePIC_SVT_IB(PHG4Reco* g4Reco, const int nlayers = 3, double radius = 0){
 	double gap = 0.1;	
 
 	for (int ilayer = 0; ilayer < nlayers; ilayer++){
-    	cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
+    	cyl = new PHG4CylinderSubsystem("SVTXIB", ilayer);
     	cyl->set_double_param("radius", svxrad[ilayer]);
     	cyl->set_string_param("material", "G4_Si");  // Silicon (G4 definition)
     	cyl->set_double_param("thickness", si_mat[ilayer]/100.*9.37);

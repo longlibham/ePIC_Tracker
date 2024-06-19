@@ -46,6 +46,7 @@
 #include "../detectors/Fun4All_particle_generator.C"
 #include "../detectors/ePIC_Tracking.C"
 #include "../detectors/ePIC_SVT_IB.C"
+#include "../detectors/ePIC_SVT_OB.C"
 #include <GlobalVariables.C>
 #include "../detectors/ePIC_BlackHole.C"
 #include "../detectors/ePIC_World.C"
@@ -70,6 +71,8 @@ void ePICInit(){
 		if(Enable::TRACKING) TrackingInit();
 		// init the SVT inner barrel
 		if(Enable::ePIC_SVTIB) ePIC_SVTIB_Init();
+		//init the SVT outer barrel
+		if(Enable::ePIC_SVTOB) ePIC_SVTOB_Init();
 
 }
 
@@ -91,7 +94,10 @@ void ePICSetup(){
 	//tracking service
 
 	// SVT IB layers
-	if(Enable::ePIC_SVTIB) radius = ePIC_SVT_IB(g4Reco, 5, radius);
+	if(Enable::ePIC_SVTIB) radius = ePIC_SVT_IB(g4Reco, 3, radius);
+
+	//SVT OB layers
+	if(Enable::ePIC_SVTOB) radius = ePIC_SVT_OB(g4Reco, 2, radius);
 	
 	//BlackHole if enabled, needs infor from all previus sub detectors for dimensions
 	if(Enable::BLACKHOLE) BlackHole(g4Reco, radius);

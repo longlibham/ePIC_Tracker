@@ -46,6 +46,7 @@ using namespace std;
 
 int Fun4All_ePIC_Tracker(
     const int nEvents = 10000,
+    const string& particlename = "pi-",
     bool use_pt = false, 
     const double pmin= 10., 
     const double pmax = 10., 
@@ -53,6 +54,7 @@ int Fun4All_ePIC_Tracker(
     const double emax = 0.1, 
     const double phimin = -M_PI/2.,
     const double phimax = M_PI/2.,
+    const string& outroot = "../data/",
     const int skip = 0,
     const string& outfile = ""
 ){
@@ -88,7 +90,12 @@ int Fun4All_ePIC_Tracker(
 	else
 		Enable::USE_P = true;
 	Input::SIMPLE = true;
-	Fun4All_particle_generator(nEvents, "pi-", pmin, pmax, emin, emax, phimin, phimax);
+	Fun4All_particle_generator(nEvents, 
+                            particlename.c_str(), 
+                            pmin, pmax, 
+                            emin, emax, 
+                            phimin, phimax //-M_PI/2., M_PI/2.
+                            );
 	
 	//
 	//Geant4 setup
@@ -101,6 +108,8 @@ int Fun4All_ePIC_Tracker(
     Enable::ePIC_SVTIB_OVERLAPCHECK = true;
 
     //enable SVT_OB
+    Enable::ePIC_SVTOB = true;
+    Enable::ePIC_SVTOB_OVERLAPCHECK = true;
 
     //enable blackhole
     Enable::BLACKHOLE = true;
@@ -131,11 +140,10 @@ int Fun4All_ePIC_Tracker(
     
     ostringstream oss;
     oss.str("");
-	if(Enable::USE_PT)
-		oss<<"../data/fixed_pT/FastTrackingEval_"<<pmin<<"-"<<pmax<<"GeV.root";
-	else if(Enable::USE_P)
-		oss<<"../data/fixed_p/FastTrackingEval_"<<pmin<<"-"<<pmax<<"GeV.root";
-
+	//if(Enable::USE_PT)
+	oss<<outroot<<"FastTrackingEval_"<<pmin<<"-"<<pmax<<"GeV.root";
+    //else if(Enable::USE_P)
+	//	oss<<outroot<<"FastTrackingEval_"<<pmin<<"-"<<pmax<<"GeV.root";
     if(Enable::TRACKING_EVAL) Tracking_Eval(oss.str().c_str());
 
     //
@@ -153,7 +161,7 @@ int Fun4All_ePIC_Tracker(
     //
 
     se->Print("NODETREE");
-    
+
     if(nEvents < 0){
         return 0;
     }
@@ -167,7 +175,7 @@ int Fun4All_ePIC_Tracker(
     }
     se->skip(skip);
     se->run(nEvents);
-    cout<<"####################################RUN DONE!#################################"<<endl;
+    
 
     //
     // Exit
