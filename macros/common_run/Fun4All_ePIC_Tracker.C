@@ -102,18 +102,21 @@ int Fun4All_ePIC_Tracker(
 	//
 	
     //enable beam pipe
+    Enable::PIPE = true;
+    ePICPIPE::use_forward_pipes = true;
+    //Enable::PIPE_ABSORBER = true
 
     //enable SVT_IB
     Enable::ePIC_SVTIB = true;
-    Enable::ePIC_SVTIB_OVERLAPCHECK = true;
+    Enable::ePIC_SVTIB_OVERLAPCHECK = Enable::ePIC_SVTIB && true;
 
     //enable SVT_OB
     Enable::ePIC_SVTOB = true;
-    Enable::ePIC_SVTOB_OVERLAPCHECK = true;
+    Enable::ePIC_SVTOB_OVERLAPCHECK = Enable::ePIC_SVTOB && true;
 
     //enable blackhole
     Enable::BLACKHOLE = true;
-    BlackHoleGeometry::visible = true;
+    BlackHoleGeometry::visible = Ebable::BLACKHOLE && true;
 
     //enable tracking
     Enable::TRACKING = true;
@@ -121,7 +124,7 @@ int Fun4All_ePIC_Tracker(
     G4TRACKING::DISPLACED_VERTEX = true; // this option exclude vertex in the track fitting and use RAVE to reconstruct primary and 2
                                         //projections to calorimeters
     Enable::DISPLAY = true;
-    Enable::DSTOUT = true;
+    Enable::DSTOUT = false;
 
 
     //Initialsize the selected sybsystems

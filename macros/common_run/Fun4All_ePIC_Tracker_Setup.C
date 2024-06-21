@@ -45,6 +45,7 @@
 // user defined
 #include "../detectors/Fun4All_particle_generator.C"
 #include "../detectors/ePIC_Tracking.C"
+#include "../detectors/ePIC_SVT_Pipe.C"
 #include "../detectors/ePIC_SVT_IB.C"
 #include "../detectors/ePIC_SVT_OB.C"
 #include <GlobalVariables.C>
@@ -69,6 +70,8 @@ void ePICInit(){
 		}
 
 		if(Enable::TRACKING) TrackingInit();
+		//init the beam pipe
+		if(Enable::PIPE) PipeInit();
 		// init the SVT inner barrel
 		if(Enable::ePIC_SVTIB) ePIC_SVTIB_Init();
 		//init the SVT outer barrel
@@ -90,7 +93,7 @@ void ePICSetup(){
 	
 	double radius = 0.;
 	// beam pipe
-
+	if(Enable::PIPE) radius = Pipe(g4Reco, radius);
 	//tracking service
 
 	// SVT IB layers
