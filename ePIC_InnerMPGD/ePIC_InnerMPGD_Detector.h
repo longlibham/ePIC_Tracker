@@ -35,9 +35,6 @@ class ePIC_InnerMPGD_Detector: public PHG4Detector{
 		// destructor
 		virtual ~ePIC_InnerMPGD_Detector(){}
 
-		//define material for MPGD
-		virtual void DefineMaterials();
-
 		// geometry builder
 		virtual void ConstructMe(G4LogicalVolume* world);
 		virtual void Print(const std::string& what= "ALL") const;
