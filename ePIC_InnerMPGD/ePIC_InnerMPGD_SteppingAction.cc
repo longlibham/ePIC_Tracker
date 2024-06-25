@@ -9,7 +9,7 @@
 =========================================================================*/
 
 #include <iostream>
-#include "ePIC_InnerMPGD_Stepping.h"
+#include "ePIC_InnerMPGD_SteppingAction.h"
 #include "ePIC_InnerMPGD_Detector.h"
 #include <fstream>
 #include <sstream>

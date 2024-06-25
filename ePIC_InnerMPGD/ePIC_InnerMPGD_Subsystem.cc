@@ -11,7 +11,7 @@
 #include <iostream>
 #include "ePIC_InnerMPGD_Subsystem.h"
 #include "ePIC_InnerMPGD_Detector.h"
-#include "ePIC_InnerMPGD_Stepping.h"
+#include "ePIC_InnerMPGD_SteppingAction.h"
 #include <fstream>
 #include <sstream>
 
@@ -110,8 +110,8 @@ void ePIC_InnerMPGD_Subsystem::SetDefaultParameters(){
 	
 	set_default_double_param("radius", NAN);
     set_default_double_param("coat_thickness", NAN);
-    set_default_doulbe_param("z_min", 0);
-    set_default_doulbe_param("z_max", 0);
+    set_default_double_param("z_min", 0);
+    set_default_double_param("z_max", 0);
     set_default_double_param("KaptonOverlay_thickness", 0);
     set_default_double_param("CuGround_thickness", 0);
     set_default_double_param("PCB_thickness", 0);
@@ -121,7 +121,7 @@ void ePIC_InnerMPGD_Subsystem::SetDefaultParameters(){
     set_default_double_param("gas_thickness", 0);
     set_default_double_param("mesh_thickness", 0);
     set_default_double_param("GasGap_thickness", 0);
-    set_default_double_patam("DriftCuElectrode_thickness", 0);
+    set_default_double_param("DriftCuElectrode_thickness", 0);
     set_default_double_param("DriftKapton_thickness", 0);
     set_default_double_param("DriftCuGround_thickness", 0);
     set_default_double_param("fudge_thickness", 0);
