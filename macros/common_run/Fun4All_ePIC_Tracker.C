@@ -114,9 +114,13 @@ int Fun4All_ePIC_Tracker(
     Enable::ePIC_SVTOB = true;
     Enable::ePIC_SVTOB_OVERLAPCHECK = Enable::ePIC_SVTOB && true;
 
+    //enable Inner MPGD
+  //  Enable::ePIC_InnerMPGD = false;
+  //  Enable::ePIC_InnerMPGD_OVERLAPCHECK = Enable::ePIC_InnerMPGD && true;
+
     //enable blackhole
     Enable::BLACKHOLE = true;
-    BlackHoleGeometry::visible = Ebable::BLACKHOLE && true;
+    BlackHoleGeometry::visible = Enable::BLACKHOLE && true;
 
     //enable tracking
     Enable::TRACKING = true;

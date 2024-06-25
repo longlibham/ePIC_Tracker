@@ -48,6 +48,7 @@
 #include "../detectors/ePIC_SVT_Pipe.C"
 #include "../detectors/ePIC_SVT_IB.C"
 #include "../detectors/ePIC_SVT_OB.C"
+//#include "../detectors/ePIC_InnerMPGD.C"
 #include <GlobalVariables.C>
 #include "../detectors/ePIC_BlackHole.C"
 #include "../detectors/ePIC_World.C"
@@ -59,6 +60,7 @@ using namespace std;
 R__LOAD_LIBRARY(libfun4all.so)
 R__LOAD_LIBRARY(libg4detectors.so)
 R__LOAD_LIBRARY(libePIC_SVT_OB_Detector.so)
+R__LOAD_LIBRARY(libePIC_InnerMPGD_Detector.so)
 R__LOAD_LIBRARY(libg4histos.so)
 R__LOAD_LIBRARY(libg4trackfastsim.so)
 
@@ -76,6 +78,8 @@ void ePICInit(){
 		if(Enable::ePIC_SVTIB) ePIC_SVTIB_Init();
 		//init the SVT outer barrel
 		if(Enable::ePIC_SVTOB) ePIC_SVTOB_Init();
+		//init the Inner MPGD barrel
+	//	if(Enable::ePIC_InnerMPGD) ePIC_InnerMPGD_Init();
 
 }
 
@@ -101,6 +105,9 @@ void ePICSetup(){
 
 	//SVT OB layers
 	if(Enable::ePIC_SVTOB) radius = ePIC_SVT_OB(g4Reco, 2, radius);
+
+	//Inner MPGD layers
+//	if(Enable::ePIC_InnerMPGD) radius = ePIC_InnerMPGD(g4Reco, 1, radius);
 	
 	//BlackHole if enabled, needs infor from all previus sub detectors for dimensions
 	if(Enable::BLACKHOLE) BlackHole(g4Reco, radius);
