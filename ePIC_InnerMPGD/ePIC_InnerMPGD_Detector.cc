@@ -80,12 +80,14 @@ void ePIC_InnerMPGD_Detector::DefineMaterials(){
     mat_fr4->AddElement(elH, 12./26.*100*perCent);
     mat_fr4->AddElement(elO, 3./26.*100*perCent);
 
+    cout<<*(G4Material::GetMaterialTable())<<endl;
+
     
 }
 
 void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 
-    double radius = m_Params->get_double_param("radius");
+    double radius = m_Params->get_double_param("radius") * cm;
 	double coat_t = m_Params->get_double_param("coat_thickness") * cm;
     double z_min = m_Params->get_double_param("z_min") * cm;
     double z_max = m_Params->get_double_param("z_max") * cm;
@@ -103,7 +105,7 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     double DriftCuGround_t = m_Params->get_double_param("DriftCuGround_thickness") * cm;
     double fudge_t = m_Params->get_double_param("fudge_thickness") * cm;
 
-	int stave_number = m_Params->get_int_param("stave_number") * cm;
+ 	int stave_number = m_Params->get_int_param("stave_number"); 
 
     if(!std::isfinite(radius) || !std::isfinite(coat_t) || !std::isfinite(z_min) || !std::isfinite(z_max) || 
         !std::isfinite(KaptonOverlay_t) || !std::isfinite(CuGround_t) || !std::isfinite(pcb_t) || !std::isfinite(CuStrip_t) ||
@@ -118,20 +120,20 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
             cout<<"DriftKapton_thickness: "<<DriftKapton_t<<" DriftCuGround_thickness: "<<DriftCuGround_t<<" fudge_thickness: "<<fudge_t<<endl;
         }
 
-    // construct the gas cylinder to contain the inner MPGD detector
+//     // construct the gas cylinder to contain the inner MPGD detector
     G4NistManager* nist = G4NistManager::Instance();
-    G4Material* mat_mpgd_gas = nist->FindOrBuildMaterial("MPGD_GAS");
+    G4Material* mat_mpgd_gas = nist->FindOrBuildMaterial("ePHEINX_TPC_Gas");
     G4Colour col_mpgd_gas = G4Colour(0.45, 0.25, 0.0, 0.4);
-    double offset_z = z_max + z_min; 
+    double offset_z = (z_max + z_min)/2.; 
 
     G4VSolid* coat_solid = new G4Tubs("ePIC_MPGD_coat", radius - coat_t/2., radius + coat_t/2., (z_max - z_min)/2., 0., 2*M_PI);
     G4LogicalVolume* coat_logic = new G4LogicalVolume(coat_solid, mat_mpgd_gas, "coatLogic");
     G4VisAttributes* coat_vis = new  G4VisAttributes(col_mpgd_gas); // set the coat color to be brown and alpha 0.4
     coat_vis->SetForceSolid(true);
-    coat_logic->SetVisAttributes(coat_vis);
+    logicWorld->SetVisAttributes(coat_vis);
 
+   
     // placement of the Ar-butane coat
-    
     new G4PVPlacement(nullptr,  //no rotation
                     G4ThreeVector(0., 0., offset_z),    //at (0, 0, 0)
                     coat_logic,         //logical volume
@@ -143,11 +145,13 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     );
 
 
-    // Detector construction
+
+    //Detector construction
     //drift copper ground
     G4Material* mat_cu = nist->FindOrBuildMaterial("G4_Cu");
     G4Colour col_cu = G4Colour(221./255., 125./255., 4./255., 1.);
     double width = radius*std::tan(2*M_PI/stave_number);
+    //double width = radius*std::tan(2*180*deg/stave_number);
     G4VSolid* DriftCuGround_solid = new G4Box("DriftCuGround_plane", width/2., DriftCuGround_t/2., (z_max - z_min)/2.);
     G4LogicalVolume* DriftCuGround_logic = new G4LogicalVolume(DriftCuGround_solid, mat_cu, "DriftCuGroundLogic");
     G4VisAttributes* DriftCuGround_vis = new G4VisAttributes(col_cu); 
@@ -211,7 +215,7 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     ResistiveStrip_logic->SetVisAttributes(ResistiveStrip_vis);
 
 
-    //Kapton strip
+    //Kapton stripxG4Color(G4Colour::Blue())
     G4VSolid* KaptonStrip_solid = new G4Box("KaptonStrip_plane", width/2., KaptonStrip_t/2., (z_max-z_min)/2.);
     G4LogicalVolume*  KaptonStrip_logic = new G4LogicalVolume(KaptonStrip_solid, mat_kapton, "KaptonStripLogic");
     G4VisAttributes* KaptonStrip_vis = new G4VisAttributes(col_kapton);
@@ -226,7 +230,7 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     CuStrip_logic->SetVisAttributes(CuStrip_vis);
 
     //PCB
-    G4Material* mat_fr4 = nist->FindOrBuildMaterial("Fr-4");
+    G4Material* mat_fr4 = nist->FindOrBuildMaterial("FR4");
     G4Colour col_fr4 = G4Colour(0., 67., 0., 1.);
     G4VSolid* pcb_solid = new G4Box("pcb_plane", width/2., pcb_t/2., (z_max-z_min)/2.);
     G4LogicalVolume* pcb_logic = new G4LogicalVolume(pcb_solid, mat_fr4, "PCBLogic");
@@ -248,15 +252,16 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     KaptonOverlay_vis->SetForceSolid(true);
     KaptonOverlay_logic->SetVisAttributes(KaptonOverlay_vis);
 
+    double no_overlapp = 0.0001*cm;
     //placement of the detector layers inside the Ar-Butane coat
     for(int istave =0; istave<stave_number; istave++){
         //Drift Cu ground
         
-        double phi = istave * 2*M_PI/stave_number;
+        double phi = istave * 2*M_PI/stave_number + no_overlapp;
         G4RotationMatrix rotm = G4RotationMatrix();
         rotm.rotateZ(M_PI/2.+ phi);
 
-        G4ThreeVector position = G4ThreeVector(radius*std::cos(phi), radius*std::sin(phi), offset_z);
+        G4ThreeVector position = G4ThreeVector(radius*std::cos(phi), radius*std::sin(phi), 0);
         G4Transform3D transform = G4Transform3D(rotm, position);
         new G4PVPlacement(
             transform, //rotation, positon
@@ -269,8 +274,8 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         );
 
         //Drift Kapton
-        double radius_dk = radius + DriftCuGround_t;
-        position = G4ThreeVector(radius_dk*std::cos(phi), radius_dk*std::sin(phi), offset_z);
+        double radius_dk = radius + DriftCuGround_t + no_overlapp;
+        position = G4ThreeVector(radius_dk*std::cos(phi), radius_dk*std::sin(phi), 0);
         transform = G4Transform3D(rotm, position);
         new G4PVPlacement(
             transform,
@@ -283,8 +288,8 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         );
 
         //Drift Cu Electrode
-        double radius_dce = radius_dk + DriftKapton_t;
-        position = G4ThreeVector(radius_dce*std::cos(phi), radius_dce*std::sin(phi), offset_z);
+        double radius_dce = radius_dk + DriftKapton_t + no_overlapp;
+        position = G4ThreeVector(radius_dce*std::cos(phi), radius_dce*std::sin(phi), 0);
         transform = G4Transform3D(rotm, position);
         new G4PVPlacement(
             transform,
@@ -297,8 +302,8 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         );
 
         //gas gap
-        double radius_gg = radius_dce + DriftCuElectrode_t;
-        position = G4ThreeVector(radius_gg*std::cos(phi), radius_gg*std::sin(phi), offset_z);
+        double radius_gg = radius_dce + DriftCuElectrode_t + no_overlapp;
+        position = G4ThreeVector(radius_gg*std::cos(phi), radius_gg*std::sin(phi), 0);
         transform = G4Transform3D(rotm, position);
         
         G4VPhysicalVolume* gasgap_phy =
@@ -317,8 +322,8 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 
 
         //Mesh
-        double radius_mesh = radius_gg + GasGap_t;
-        position = G4ThreeVector(radius_mesh*std::cos(phi), radius_mesh*std::sin(phi), offset_z);
+        double radius_mesh = radius_gg + GasGap_t + no_overlapp;
+        position = G4ThreeVector(radius_mesh*std::cos(phi), radius_mesh*std::sin(phi), 0);
         transform = G4Transform3D(rotm, position);
         new G4PVPlacement(
             transform,
@@ -331,8 +336,8 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         );
 
         //fudge
-        double radius_fudge = radius_mesh + mesh_t;
-        position = G4ThreeVector(radius_fudge*std::cos(phi), radius_fudge*std::sin(phi), offset_z);
+        double radius_fudge = radius_mesh + mesh_t + no_overlapp;
+        position = G4ThreeVector(radius_fudge*std::cos(phi), radius_fudge*std::sin(phi), 0);
         transform = G4Transform3D(rotm, position);
         new G4PVPlacement(
             transform,
@@ -345,8 +350,8 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         );
 
         //gas
-        double radius_g = radius_fudge + fudge_t;
-        position = G4ThreeVector(radius_g*std::cos(phi), radius_g*std::sin(phi), offset_z);
+        double radius_g = radius_fudge + fudge_t + no_overlapp;
+        position = G4ThreeVector(radius_g*std::cos(phi), radius_g*std::sin(phi), 0);
         transform = G4Transform3D(rotm, position);
         new G4PVPlacement(
             transform,
@@ -359,8 +364,8 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         );
 
         //Resistive strip
-        double radius_rs = radius_g + gas_t;
-        position = G4ThreeVector(radius_rs*std::cos(phi), radius_rs*std::sin(phi), offset_z);
+        double radius_rs = radius_g + gas_t + no_overlapp;
+        position = G4ThreeVector(radius_rs*std::cos(phi), radius_rs*std::sin(phi), 0);
         transform = G4Transform3D(rotm, position);
         new G4PVPlacement(
             transform,
@@ -373,8 +378,8 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         );
 
         //Kapton strip
-        double radius_ks = radius_rs + ResistiveStrip_t;
-        position = G4ThreeVector(radius_ks*std::cos(phi), radius_ks*std::sin(phi), offset_z);
+        double radius_ks = radius_rs + ResistiveStrip_t + no_overlapp;
+        position = G4ThreeVector(radius_ks*std::cos(phi), radius_ks*std::sin(phi), 0);
         transform = G4Transform3D(rotm, position);
         new G4PVPlacement(
             transform,
@@ -387,8 +392,8 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         );
 
         //Cu strip
-        double radius_cus = radius_ks + KaptonStrip_t;
-        position = G4ThreeVector(radius_cus*std::cos(phi), radius_cus*std::sin(phi), offset_z);
+        double radius_cus = radius_ks + KaptonStrip_t + no_overlapp;
+        position = G4ThreeVector(radius_cus*std::cos(phi), radius_cus*std::sin(phi), 0);
         transform = G4Transform3D(rotm, position);
         new G4PVPlacement(
             transform,
@@ -401,8 +406,8 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         );
 
         //PCB
-        double radius_pcb = radius_cus + CuStrip_t;
-        position = G4ThreeVector(radius_pcb*std::cos(phi), radius_pcb*std::sin(phi), offset_z);
+        double radius_pcb = radius_cus + CuStrip_t + no_overlapp;
+        position = G4ThreeVector(radius_pcb*std::cos(phi), radius_pcb*std::sin(phi), 0);
         transform = G4Transform3D(rotm, position);
         new G4PVPlacement(
             transform,
@@ -415,8 +420,8 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         );
 
         //Cu ground
-        double radius_cug = radius_pcb + pcb_t;
-        position = G4ThreeVector(radius_cug*std::cos(phi), radius_cug*std::sin(phi), offset_z);
+        double radius_cug = radius_pcb + pcb_t + no_overlapp;
+        position = G4ThreeVector(radius_cug*std::cos(phi), radius_cug*std::sin(phi), 0);
         transform = G4Transform3D(rotm, position);
         new G4PVPlacement(
             transform,
@@ -429,8 +434,8 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         );
 
         //Kapton Overlay
-        double radius_ko = radius_cug + CuGround_t;
-        position = G4ThreeVector(radius_ko*std::cos(phi), radius_ko*std::sin(phi), offset_z);
+        double radius_ko = radius_cug + CuGround_t + no_overlapp;
+        position = G4ThreeVector(radius_ko*std::cos(phi), radius_ko*std::sin(phi), 0);
         transform = G4Transform3D(rotm, position);
         new G4PVPlacement(
             transform,
@@ -440,7 +445,7 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
             0,
             istave,
             OverlapCheck()
-        );
+       );
 
     }
 

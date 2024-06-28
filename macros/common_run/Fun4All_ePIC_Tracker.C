@@ -102,24 +102,24 @@ int Fun4All_ePIC_Tracker(
 	//
 	
     //enable beam pipe
-    Enable::PIPE = true;
-    ePICPIPE::use_forward_pipes = true;
+    Enable::PIPE = false;
+    ePICPIPE::use_forward_pipes = false;
     //Enable::PIPE_ABSORBER = true
 
     //enable SVT_IB
-    Enable::ePIC_SVTIB = true;
+    Enable::ePIC_SVTIB = false;
     Enable::ePIC_SVTIB_OVERLAPCHECK = Enable::ePIC_SVTIB && true;
 
     //enable SVT_OB
-    Enable::ePIC_SVTOB = true;
+    Enable::ePIC_SVTOB = false;
     Enable::ePIC_SVTOB_OVERLAPCHECK = Enable::ePIC_SVTOB && true;
 
     //enable Inner MPGD
-  //  Enable::ePIC_InnerMPGD = false;
-  //  Enable::ePIC_InnerMPGD_OVERLAPCHECK = Enable::ePIC_InnerMPGD && true;
+    Enable::ePIC_InnerMPGD = true;
+    Enable::ePIC_InnerMPGD_OVERLAPCHECK = Enable::ePIC_InnerMPGD && true;
 
     //enable blackhole
-    Enable::BLACKHOLE = true;
+    Enable::BLACKHOLE = false;
     BlackHoleGeometry::visible = Enable::BLACKHOLE && true;
 
     //enable tracking

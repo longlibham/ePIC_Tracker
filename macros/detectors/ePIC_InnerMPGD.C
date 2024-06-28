@@ -89,7 +89,7 @@ double ePIC_InnerMPGD(PHG4Reco* g4Reco, const int nlayers = 1, double radius = 0
     double pcb_t = 100./10000.;
     double CuStrip_t = 12./10000.;
     double KaptonStrip_t = 75./10000.;
-    double ResistiveStrip_t = 128./10000;
+    double ResistiveStrip_t = 128./10000.;
     double gas_t = 20./10000.;
     double mesh_t = 18./10000.;
     double GasGap_t = 3000./10000.;
@@ -121,7 +121,7 @@ double ePIC_InnerMPGD(PHG4Reco* g4Reco, const int nlayers = 1, double radius = 0
         innerMPGD->set_double_param("PCB_thickness", pcb_t);
         innerMPGD->set_double_param("CuStrip_thickness", CuStrip_t);
         innerMPGD->set_double_param("KaptonStrip_thickness", KaptonStrip_t);
-        innerMPGD->set_double_param("ResitiveStrip_thickness", ResistiveStrip_t);
+        innerMPGD->set_double_param("ResistiveStrip_thickness", ResistiveStrip_t);
         innerMPGD->set_double_param("gas_thickness", gas_t);
         innerMPGD->set_double_param("mesh_thickness", mesh_t);
         innerMPGD->set_double_param("GasGap_thickness", GasGap_t);
@@ -129,6 +129,7 @@ double ePIC_InnerMPGD(PHG4Reco* g4Reco, const int nlayers = 1, double radius = 0
         innerMPGD->set_double_param("DriftKapton_thickness", DriftKapton_t);
         innerMPGD->set_double_param("DriftCuGround_thickness", DriftCuGround_t);
         innerMPGD->set_double_param("fudge_thickness", fudge_t);
+		innerMPGD->set_int_param("stave_number", stave_number);
 		
 		innerMPGD->SetActive();
 //		innerMPGD->SuperDetector("SVTOB");
@@ -145,8 +146,8 @@ double ePIC_InnerMPGD(PHG4Reco* g4Reco, const int nlayers = 1, double radius = 0
 
 	// update the BlackHole geometry 
 	BlackHoleGeometry::max_radius = rmpgd + coat_t/2.;
-	BlackHoleGeometry::min_z = min_z;
-	BlackHoleGeometry::max_z = max_z;
+	BlackHoleGeometry::min_z = z_min;
+	BlackHoleGeometry::max_z = z_max;
 	BlackHoleGeometry::gap = no_overlapp;
 
 	return rmpgd + coat_t/2.;

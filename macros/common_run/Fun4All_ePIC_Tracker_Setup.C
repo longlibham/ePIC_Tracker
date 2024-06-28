@@ -17,6 +17,7 @@
 #include <string>
 
 #include <epic_svt_ob/ePIC_SVT_OB_Subsystem.h>
+#include <epic_innermpgd/ePIC_InnerMPGD_Subsystem.h>
 #include <g4detectors/PHG4DetectorSubsystem.h>
 #include <g4histos/G4HitNtuple.h>
 
@@ -48,7 +49,7 @@
 #include "../detectors/ePIC_SVT_Pipe.C"
 #include "../detectors/ePIC_SVT_IB.C"
 #include "../detectors/ePIC_SVT_OB.C"
-//#include "../detectors/ePIC_InnerMPGD.C"
+#include "../detectors/ePIC_InnerMPGD.C"
 #include <GlobalVariables.C>
 #include "../detectors/ePIC_BlackHole.C"
 #include "../detectors/ePIC_World.C"
@@ -79,7 +80,7 @@ void ePICInit(){
 		//init the SVT outer barrel
 		if(Enable::ePIC_SVTOB) ePIC_SVTOB_Init();
 		//init the Inner MPGD barrel
-	//	if(Enable::ePIC_InnerMPGD) ePIC_InnerMPGD_Init();
+		if(Enable::ePIC_InnerMPGD) ePIC_InnerMPGD_Init();
 
 }
 
@@ -107,7 +108,7 @@ void ePICSetup(){
 	if(Enable::ePIC_SVTOB) radius = ePIC_SVT_OB(g4Reco, 2, radius);
 
 	//Inner MPGD layers
-//	if(Enable::ePIC_InnerMPGD) radius = ePIC_InnerMPGD(g4Reco, 1, radius);
+	if(Enable::ePIC_InnerMPGD) radius = ePIC_InnerMPGD(g4Reco, 1, radius);
 	
 	//BlackHole if enabled, needs infor from all previus sub detectors for dimensions
 	if(Enable::BLACKHOLE) BlackHole(g4Reco, radius);
@@ -118,7 +119,7 @@ void ePICSetup(){
 	WorldSize(g4Reco, radius);
 
 	se->registerSubsystem(g4Reco);
-	return 0;
+	return ;
 }
 
 

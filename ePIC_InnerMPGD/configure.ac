@@ -1,4 +1,4 @@
-AC_INIT(ePIC_SVT_OB, [1.00])
+AC_INIT(ePIC_InnerMPGD, [1.00])
 AC_CONFIG_SRCDIR([configure.ac])
 
 AM_INIT_AUTOMAKE
