@@ -125,12 +125,11 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     G4Material* mat_mpgd_gas = nist->FindOrBuildMaterial("ePHEINX_TPC_Gas");
     G4Colour col_mpgd_gas = G4Colour(0.45, 0.25, 0.0, 0.4);
     double offset_z = (z_max + z_min)/2.; 
-
     G4VSolid* coat_solid = new G4Tubs("ePIC_MPGD_coat", radius - coat_t/2., radius + coat_t/2., (z_max - z_min)/2., 0., 2*M_PI);
     G4LogicalVolume* coat_logic = new G4LogicalVolume(coat_solid, mat_mpgd_gas, "coatLogic");
     G4VisAttributes* coat_vis = new  G4VisAttributes(col_mpgd_gas); // set the coat color to be brown and alpha 0.4
     coat_vis->SetForceSolid(true);
-    logicWorld->SetVisAttributes(coat_vis);
+    coat_logic->SetVisAttributes(coat_vis);
 
    
     // placement of the Ar-butane coat
@@ -252,7 +251,7 @@ void ePIC_InnerMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     KaptonOverlay_vis->SetForceSolid(true);
     KaptonOverlay_logic->SetVisAttributes(KaptonOverlay_vis);
 
-    double no_overlapp = 0.0001*cm;
+    double no_overlapp = 0.000*cm;
     //placement of the detector layers inside the Ar-Butane coat
     for(int istave =0; istave<stave_number; istave++){
         //Drift Cu ground
