@@ -111,8 +111,8 @@ bool ePIC_TOFBarrel_SteppingAction::UserSteppingAction(const G4Step* aStep, bool
     //	cout<< "time prepoint: " << prePoint->GetGlobalTime() << endl;
     //	cout<< "time postpoint: " << postPoint->GetGlobalTime() << endl;
 
-	cout<<"pre physical vol: "<<volume->GetName();
-	cout<<"post physical vol: "<<touchpost->GetVolume()->GetName()<<endl;
+	// cout<<"pre physical vol: "<<volume->GetName();
+	// cout<<"post physical vol: "<<touchpost->GetVolume()->GetName()<<endl;
 
 	switch (prePoint -> GetStepStatus()){
 		case fPostStepDoItProc:

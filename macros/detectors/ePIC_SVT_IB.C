@@ -55,7 +55,7 @@ void SVTIBFastKalmanFilterConfigSVTX(PHG4TrackFastSim* kalman_filter, int ilay, 
 	kalman_filter->add_phg4hits(
 			Form("G4HIT_SVTXIB_%d", ilay),
 			PHG4TrackFastSim::Cylinder,
-			50./10000., //radial-resolution [cm]
+			50./10000./sqrt(12.), //radial-resolution [cm]
 			20./10000./sqrt(12.), // azimuthal-resolution [cm]
 			20./10000./sqrt(12.), // z-resolution [cm]
 			1,   //efficiency

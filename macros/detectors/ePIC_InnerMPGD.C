@@ -57,7 +57,7 @@ void InnerMPGDFastKalmanFilterConfig(PHG4TrackFastSim* kalman_filter, int ilay, 
 	kalman_filter->add_phg4hits(
 			Form("G4HIT_InnerMPGD_%d", ilay),
 			PHG4TrackFastSim::Cylinder,
-			0.3, //radial-resolution [cm]
+			0.3/sqrt(12.), //radial-resolution [cm]
 			0.015, // azimuthal-resolution [cm]
 			0.015, // z-resolution [cm]
 			1,   //efficiency

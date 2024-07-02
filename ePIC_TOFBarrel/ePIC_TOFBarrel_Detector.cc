@@ -97,7 +97,7 @@ void ePIC_TOFBarrel_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     double CFoam_t = m_Params->get_double_param("CFoam_thickness") * cm;
     double CHoneycomb_t = m_Params->get_double_param("CHoneycomb_thickness") * cm;
 
- 	//int stave_number = m_Params->get_int_param("stave_number"); 
+ 	int stave_number = m_Params->get_int_param("stave_number"); 
 
     if(!std::isfinite(zmax) || !std::isfinite(zmin) || !std::isfinite(radius) ||
         !std::isfinite(sensor_width) || !std::isfinite(sensor_t) || !std::isfinite(hybrid_t) ||
@@ -113,7 +113,7 @@ void ePIC_TOFBarrel_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 
 
     double stave_length = zmax - zmin;
-    //double z_offset = (zmax + zmin)/2.;
+    double z_offset = (zmax + zmin)/2.;
     
     // construct the gas cylinder to contain the inner AC-LGAD TOF detector
     G4Colour col_kapton = G4Colour(146./255., 12./255., 201./255., 1.);
@@ -273,170 +273,47 @@ void ePIC_TOFBarrel_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         OverlapCheck()
     );
     
-    // place the container
-    G4VPhysicalVolume* sensor_phy = 
-    new G4PVPlacement(
-        nullptr,
-        G4ThreeVector(0, (cont_t + sensor_t)/2., 0),
-        sensor_logic,
-        "sensor_stave",
-        logicWorld,
-        0,
-        0,
-        OverlapCheck()
-    );
 
-    m_PhysicalVolumesSet.insert(sensor_phy);
+    // place the sensor and container
+    double no_overlap = 0.026*cm;
+    for(int istave = 0; istave < stave_number; istave++){
+        double phi = istave * 2*M_PI/stave_number;
+        G4RotationMatrix rotm = G4RotationMatrix();
+         double tilt = 20./180.*M_PI;
+        rotm.rotateZ(M_PI/2. + phi - tilt);
 
-    new G4PVPlacement(
-        nullptr,
-        G4ThreeVector(0, 0, 0),
-        container_logic,
-        "container_stave",
-        logicWorld,
-        0,
-        0,
-        OverlapCheck()
-
-    );
-
-    // //placement of the detector layers 
-    // double no_overlap = 0.008*cm;
-    // for(int istave =0; istave<stave_number; istave++){
-    //     //Drift Cu ground
+        G4ThreeVector position = G4ThreeVector(radius*std::cos(phi), radius*std::sin(phi), z_offset);
+        G4Transform3D transform = G4Transform3D(rotm, position);
         
-    //     double phi = istave * 2*M_PI/stave_number;
-    //     G4RotationMatrix rotm = G4RotationMatrix();
-    //     double tilt = 20./280.*M_PI;
-    //     rotm.rotateZ(M_PI/2. + phi + tilt);
+        G4VPhysicalVolume* sensor_phy = 
+        new G4PVPlacement(
+            transform,
+            sensor_logic,
+            "sensor_stave",
+            logicWorld,
+            0,
+            istave,
+            OverlapCheck()
+        );
 
-    //     G4ThreeVector position = G4ThreeVector(radius*std::cos(phi), radius*std::sin(phi), z_offset);
-    //     G4Transform3D transform = G4Transform3D(rotm, position);
-    //     G4VPhysicalVolume* sensor_phy = 
-    //     new G4PVPlacement(
-    //         transform, //rotation, positon
-    //         sensor_logic,
-    //         "sensor_stave",
-    //         logicWorld,
-    //         0,
-    //         istave,
-    //         OverlapCheck()
-    //     );
+        m_PhysicalVolumesSet.insert(sensor_phy);
 
-    //     m_PhysicalVolumesSet.insert(sensor_phy);
-       
-    // //     no_overlap = 0.004*cm;
-    // //     double radius_hybrid = radius + sensor_t/2. + hybrid_t/2. + no_overlap;
-    // //     position = G4ThreeVector(
-    // //         radius_hybrid*std::cos(phi), 
-    // //         radius_hybrid*std::sin(phi), 
-    // //         z_offset
-    // //         );
-        
-    // //     transform = G4Transform3D(rotm, position);
-    // //     new G4PVPlacement(
-    // //         transform,
-    // //         hybrid_logic,
-    // //         "hybrid_stave",
-    // //         logicWorld,
-    // //         0,
-    // //         istave,
-    // //         OverlapCheck()
-    // //     );
+        double radius_con = radius + sensor_t/2. + cont_t/2. + no_overlap;
+        position = G4ThreeVector(radius_con*std::cos(phi), radius_con*std::sin(phi), z_offset);
+        transform = G4Transform3D(rotm, position);
+        new G4PVPlacement(
+            transform,
+            container_logic,
+            "container_stave",
+            logicWorld,
+            0,
+            istave,
+            OverlapCheck()
 
-    // //     no_overlap = 0.006*cm;
-    // //     double radius_cft = radius_hybrid + hybrid_t/2. + CFskin_t/2. + no_overlap;
-    // //     position = G4ThreeVector(
-    // //         radius_cft*std::cos(phi),
-    // //         radius_cft*std::sin(phi),
-    // //         z_offset
-    // //         );
-    // //     transform = G4Transform3D(rotm, position);
-    // //     new G4PVPlacement(
-    // //         transform,
-    // //         cfskin_logic,
-    // //         "CFskin_stave",
-    // //         logicWorld,
-    // //         0,
-    // //         istave,
-    // //         OverlapCheck()
-    // //     );
-        
-    // //     double radius_ct = radius_cft + CFskin_t/2. + CoolingTube_t/2. + no_overlap;
-    // //     position = G4ThreeVector(
-    // //         radius_ct*std::cos(phi),
-    // //         radius_ct*std::sin(phi),    
-    // //         z_offset
-    // //         );
-    // //     transform = G4Transform3D(rotm, position);
-    // //     new G4PVPlacement(
-    // //         transform,
-    // //         CoolingTube_logic,
-    // //         "CoolingTube_stave",
-    // //         logicWorld,
-    // //         0,
-    // //         istave,
-    // //         OverlapCheck()
-    // //     );
+        );
+    
+    }
 
-    // //     no_overlap = 0.007*cm;
-    // //     double radius_coolant = radius_ct + CoolingTube_t/2. + Coolant_t/2. + no_overlap;
-    // //     position = G4ThreeVector(
-    // //         radius_coolant*std::cos(phi),
-    // //         radius_coolant*std::sin(phi),
-    // //         z_offset
-    // //    );
-    // //     transform = G4Transform3D(rotm, position);
-    // //     new G4PVPlacement(
-    // //         transform,
-    // //         Coolant_logic,
-    // //         "Coolant_stave",
-    // //         logicWorld,
-    // //         0,
-    // //         istave,
-    // //         OverlapCheck()
-    // //     );
-
-    // //     no_overlap = 0.001*cm;
-    // //     double radius_cf = radius_coolant + Coolant_t/2. + CFoam_t/2. + no_overlap;
-    // //     position = G4ThreeVector(
-    // //         radius_cf*std::cos(phi),
-    // //         radius_cf*std::sin(phi),
-    // //         z_offset
-    // //     );
-
-    // //     transform = G4Transform3D(rotm, position);
-    // //     new G4PVPlacement(
-    // //         transform,
-    // //         CFoam_logic,
-    // //         "CFoam_stave",
-    // //         logicWorld,
-    // //         0,
-    // //         istave,
-    // //         OverlapCheck()
-    // //     );
-
-    // //    no_overlap = 0.25*cm;
-    //     double radius_cc = radius + sensor_t/2. + CHoneycomb_t/2. + no_overlap;
-    //     position = G4ThreeVector(
-    //         radius_cc*std::cos(phi),
-    //         radius_cc*std::sin(phi),
-    //         z_offset
-    //     );
-
-    //     transform = G4Transform3D(rotm, position);
-    //     new G4PVPlacement(
-    //         transform,
-    //         CHoneycomb_logic,
-    //         "CHoneycomb_stave",
-    //         logicWorld,
-    //         0,
-    //         istave,
-    //         OverlapCheck()
-    //     );
-
-
-    // }
 
     return ;
 }
