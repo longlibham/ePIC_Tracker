@@ -120,6 +120,7 @@ void ePIC_OuterMPGD_Subsystem::SetDefaultParameters(){
     set_default_double_param("readoutnomex_thickness", 0);
     set_default_double_param("readoutkapton_thickness", 0);
     set_default_double_param("pcb_thickness", 0);
+	set_default_double_param("carbonfoam_thickness", 0.);
     set_default_int_param("stave_phi", 0);
     set_default_int_param("stave_z", 0);
 

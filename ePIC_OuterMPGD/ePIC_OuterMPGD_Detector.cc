@@ -17,6 +17,7 @@
 
 #include <Geant4/G4Tubs.hh>
 #include <Geant4/G4Box.hh>
+#include <Geant4/G4SubtractionSolid.hh>
 #include <Geant4/G4Color.hh>
 #include <Geant4/G4LogicalVolume.hh>
 #include <Geant4/G4Material.hh>
@@ -100,6 +101,7 @@ void ePIC_OuterMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     double readoutnomex_t = m_Params->get_double_param("readoutnomex_thickness") * cm;
     double readoutkapton_t = m_Params->get_double_param("readoutkapton_thickness") * cm;
     double pcb_t = m_Params->get_double_param("pcb_thickness") * cm;
+    double cf_t = m_Params->get_double_param("carbonfoam_thickness") * cm;
 
 
  	int stave_phi = m_Params->get_int_param("stave_phi");
@@ -132,6 +134,7 @@ void ePIC_OuterMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     G4Colour col_cu = G4Colour(246./255., 167./255., 1./255., 1.);
     G4Colour col_nomex = G4Colour(1., 1., 1., 0.7);
     G4Colour Col_fr4 = G4Colour(26./255., 117./255., 1./255., 1.);
+    G4Colour col_cf = G4Color(1., 1., 1., 1.);
 
     double no_overlap_z = 0.1 * cm; 
     double offset_z = (zmax + zmin)/2.; 
@@ -216,6 +219,15 @@ void ePIC_OuterMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     pcb_vis->SetForceSolid(true);
     pcb_logic->SetVisAttributes(pcb_vis);
 
+    // carbon foam service
+    G4Material* mat_cf = nist->FindOrBuildMaterial("CF");
+    G4VSolid* cf_solid = new G4Box("cf_plane", module_width/2., cf_t/2., z_length/2.);
+    G4VSolid* aircut_solid = new G4Box("aircut_plane", (module_width - 5.)/2., (cf_t + driftgap_t)/2., (z_length-5.)/2.);
+    G4VSolid* carbonfoamservice_solid = new G4SubtractionSolid("carbonfoam_plane", cf_solid, aircut_solid);
+    G4LogicalVolume* carbonfoamservice_logic = new G4LogicalVolume(carbonfoamservice_solid, mat_cf, "CarbonFoamLogic");
+    G4VisAttributes* carbonfoam_vis = new G4VisAttributes(col_cf);
+    carbonfoam_vis->SetForceSolid(true);
+    carbonfoamservice_logic->SetVisAttributes(carbonfoam_vis);
 
     // displacement of the modules
     for(int nz = 0; nz < stave_z; nz++){
@@ -240,22 +252,39 @@ void ePIC_OuterMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
                 "driftgap_stave",
                 logicWorld,
                 0,
-                cpno,double zmin = -112.5;
-	double zmax = 174.0;
-	double rtof = 64.6;
-	double sensor_width = 3.2;
-	double module_width = 5.6;
-	double coolingtube_width = 0.75;
-	double sensor_t = 0.03;
-	double hybrid_t = 2*0.008125;
-	double CFskin_t = 2*0.0075;
-	double CoolingTube_t = 0.08;
-	double Coolant_t = 0.08;
-	double CFoam_t = 2*0.265;
-	double CHoneycomb_t = 2*0.265;
+                cpno,
+                OverlapCheck()
+            );
 
-    int stave_number = 144;
+            m_PhysicalVolumesSet.insert(gasgap_phy);
 
+            // carbon foam service 
+            double radius_cf = radius - driftgap_t/2. - cf_t/2.;
+            position = G4ThreeVector(
+                radius_cf*std::cos(phi),
+                radius_cf*std::sin(phi),
+                posz
+            );
+
+            transform = G4Transform3D(rotm, position);
+            new G4PVPlacement(
+                transform,
+                carbonfoamservice_logic,
+                "carbonfoam_stave",
+                logicWorld,
+                0,
+                cpno,
+                OverlapCheck()
+            );
+
+
+            double radius_wgg = radius + driftgap_t/2. + windowgap_t/2.;
+            position = G4ThreeVector(
+                radius_wgg*std::cos(phi),
+                radius_wgg*std::sin(phi),
+                posz
+            );
+            
             transform = G4Transform3D(rotm, position);
             new G4PVPlacement(
                 transform,

@@ -93,6 +93,7 @@ double ePIC_OuterMPGD(PHG4Reco* g4Reco, const int nlayers = 1, double radius = 0
 	double readoutnomex_t = 50./10000.;
 	double readoutkapton_t = 50./10000.;
 	double pcb_t = 2.8/10.; 
+	double carbonfoam_t = 3.5/10.;
 	int stave_z = 2;
 	int stave_phi = 12;
 
@@ -119,6 +120,7 @@ double ePIC_OuterMPGD(PHG4Reco* g4Reco, const int nlayers = 1, double radius = 0
 		OuterMPGD->set_double_param("readoutnomex_thickness", readoutnomex_t);
 		OuterMPGD->set_double_param("readoutkapton_thickness", readoutkapton_t);
 		OuterMPGD->set_double_param("pcb_thickness", pcb_t);
+		OuterMPGD->set_double_param("carbonfoam_thickness", carbonfoam_t);
 
 		OuterMPGD->set_int_param("stave_phi", stave_phi);
 		OuterMPGD->set_int_param("stave_z", stave_z);
