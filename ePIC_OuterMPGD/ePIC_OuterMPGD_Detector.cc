@@ -134,7 +134,7 @@ void ePIC_OuterMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     G4Colour col_cu = G4Colour(246./255., 167./255., 1./255., 1.);
     G4Colour col_nomex = G4Colour(1., 1., 1., 0.7);
     G4Colour Col_fr4 = G4Colour(26./255., 117./255., 1./255., 1.);
-    G4Colour col_cf = G4Color(1., 1., 1., 1.);
+    G4Colour col_cf = G4Color(0., 0., 0., 1.);
 
     double no_overlap_z = 0.1 * cm; 
     double offset_z = (zmax + zmin)/2.; 
