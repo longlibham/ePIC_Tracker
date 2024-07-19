@@ -36,9 +36,19 @@
 #include <sstream>
 
 R__LOAD_LIBRARY(libg4detectors.so)
+R__LOAD_LIBRARY(libePIC_SVTIB_Detector.so)
 
 using namespace std;
 
+namespace SVTIB{
+	double si_radius[3] = {3.6, 4.8, 12.0};
+    double si_mat = 0.05;
+    double length = 27.;
+    double lec_length = 0.45;
+    double rec_length = 0.15;
+    double peri_width = 0.0525;
+    double tile_width = 0.9782;
+}
 namespace Enable{
 	bool ePIC_SVTIB = false;
 	bool ePIC_SVTIB_OVERLAPCHECK = false;
@@ -69,54 +79,47 @@ void SVTIBFastKalmanFilterConfigSVTX(PHG4TrackFastSim* kalman_filter, int ilay, 
 
 double ePIC_SVT_IB(PHG4Reco* g4Reco, const int nlayers = 3, double radius = 0){
 
-	if (nlayers > 5){
-		cout<<"Silicon VTX layers should not exceed 5!"<<endl;
+	if (nlayers > 3){
+		cout<<"Silicon VTX layers should not exceed 3!"<<endl;
 		exit(1);
 	}
 	
 	bool OverlapCheck = Enable::OVERLAPCHECK || Enable::ePIC_SVTIB_OVERLAPCHECK;
 
-	PHG4CylinderSubsystem* cyl(nullptr);
-
-	// for ePIC-SVT 5 layers of silicon
-  	double si_mat[5] = {0.05, 0.05, 0.05, 0.25, 0.55}; 
-  	double svxrad[5] = {3.6, 4.8, 12.0, 27.0, 42.0};
-  	double length[5] = {27., 27., 27., 54., 84.};  // -1 use eta coverage to determine length
-	if(svxrad[0] <= radius){
+	if(SVTIB::si_radius[0] <= radius){
 		cout<<"Geometry overlap happens, please check the radius of each layer!"<<endl;
 		exit(-1);
 	}
 
-	double gap = 0.1;	
-
+	ePIC_SVTIB_Subsystem* svt_ib;
 	for (int ilayer = 0; ilayer < nlayers; ilayer++){
-    	cyl = new PHG4CylinderSubsystem("SVTXIB", ilayer);
-    	cyl->set_double_param("radius", svxrad[ilayer]);
-    	cyl->set_string_param("material", "G4_Si");  // Silicon (G4 definition)
-    	cyl->set_double_param("thickness", si_mat[ilayer]/100.*9.37);
-		cyl->set_double_param("place_z", 0.);
-    	cyl->SetActive();
-    //	cyl->SuperDetector("SVTX");
-    	if (length[ilayer] > 0){
-      		cyl->set_double_param("length", length[ilayer]);
-    	}
-		
-		cyl->OverlapCheck(OverlapCheck);
-    	g4Reco->registerSubsystem(cyl);
+		svt_ib = new ePIC_SVTIB_Subsystem("SVTIB", ilayer);
+		svt_ib->set_double_param("radius", SVTIB::si_radius[ilayer]);
+		svt_ib->set_double_param("si_thickness", SVTIB::si_mat/100.*9.37);
+		svt_ib->set_double_param("length", SVTIB::length);
+		svt_ib->set_double_param("lec_length", SVTIB::lec_length);
+		svt_ib->set_double_param("rec_length", SVTIB::rec_length);
+		svt_ib->set_double_param("periphery_width", SVTIB::peri_width);
+		svt_ib->set_double_param("tile_width", SVTIB::tile_width);
+    	svt_ib->SetActive();
+    //	svt_ib->SuperDetector("SVTX");
 
-		SVTIBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilter, ilayer, svxrad[ilayer], false);//true);
-		SVTIBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterInnerTrack, ilayer, svxrad[ilayer], false);
-		SVTIBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterSiliconTrack, ilayer, svxrad[ilayer], false);
+		svt_ib->OverlapCheck(OverlapCheck);
+    	g4Reco->registerSubsystem(svt_ib);
+
+		SVTIBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilter, ilayer, SVTIB::si_radius[ilayer], false);//true);
+		SVTIBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterInnerTrack, ilayer, SVTIB::si_radius[ilayer], false);
+		SVTIBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterSiliconTrack, ilayer, SVTIB::si_radius[ilayer], false);
 	
 	}
 	
 	// update the BlackHole geometry 
-	BlackHoleGeometry::max_radius = svxrad[nlayers-1];
-	BlackHoleGeometry::min_z = -length[nlayers-1]/2.;
-	BlackHoleGeometry::max_z = length[nlayers-1]/2.;
-	BlackHoleGeometry::gap = gap;
+	BlackHoleGeometry::max_radius = SVTIB::si_radius[nlayers-1];
+	BlackHoleGeometry::min_z = -SVTIB::length/2.;
+	BlackHoleGeometry::max_z = SVTIB::length/2.;
+	BlackHoleGeometry::gap = no_overlapp;
 
-	return svxrad[nlayers-1];
+	return SVTIB::si_radius[nlayers-1];
 }
 
 #endif
