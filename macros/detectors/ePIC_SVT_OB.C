@@ -40,6 +40,32 @@ R__LOAD_LIBRARY(libePIC_SVT_OB_Detector.so)
 
 using namespace std;
 
+namespace ePIC_SVTOB{
+	double carbon_thickness = 0.5;//0.5*0.03;
+   	double carbon_length[2] = {54.31, 83.75};
+	double carbon_width = 3.92;
+	double si_thickness = 0.05/100.*9.37; //0.005;
+	double si_length[2] = {15.0529, 12.8880};
+	double si_width = 3.9128;
+
+	double lec_length = 0.45;
+	double rec_length = 0.15;
+	double anc_length = 1.0;
+	double anc_thickness = 0.03;
+	double las_airspace = 0.45;
+	double periphery_width = 0.0525;
+	double kapton_thickness = 0.005;
+
+	double r_inner[2] = {27.1, 41.8};
+	double r_outer[2] = {27.7, 42.4};
+
+	int n_silicon_z[2] = {4, 8};
+	int n_stave_phi[2] = {46, 70};
+	double las_overlap[2] = {2.55, 2.98};
+	const int ob_layers = 2;
+
+}
+
 namespace Enable{
 	bool ePIC_SVTOB = false;
 	bool ePIC_SVTOB_OVERLAPCHECK = false;
@@ -80,25 +106,13 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 	// build my SVT OB layers
 	//
 	// L3/L4 OB
-	double r_inner[2] = {27.1, 41.8};
-	double r_outer[2] = {27.7, 42.4};
 
-	if(r_inner[0] <= radius){
+	if(ePIC_SVTOB::r_inner[0] <= radius){
 		cout<<"Geometry overlap happens, please check the radius of each layer!"<<endl;
 		exit(-1);
 	}
 
-	double carbon_thickness = 0.5*0.03;//0.5*0.03;
-   	double carbon_length[2] = {54.31, 83.75};
-	double carbon_width = 3.92;
-	double si_thickness = 0.05/100.*9.37; //0.005;
-	double si_length[2] = {15.0529, 12.8880};
-	double si_width = 3.3128;
-	double si_carbon_gap = 0.5;
-	int n_silicon_z[2] = {4, 8};
-	int n_stave_phi[2] = {46, 70};
-	double las_overlap[2] = {2.55, 2.98};
-	double gap = 0.1;
+
 	
 	ePIC_SVT_OB_Subsystem* svt_ob;
 	for(int ilayer = 0; ilayer<nlayers; ilayer++){	
@@ -106,23 +120,29 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 		svt_ob = new ePIC_SVT_OB_Subsystem("SVTXOB", ilayer);
 		
 		// set the parameters
-		svt_ob->set_double_param("r_inner", r_inner[ilayer]);
-		svt_ob->set_double_param("r_outer", r_outer[ilayer]);
+		svt_ob->set_double_param("r_inner", ePIC_SVTOB::r_inner[ilayer]);
+		svt_ob->set_double_param("r_outer", ePIC_SVTOB::r_outer[ilayer]);
 		// carbon support 
-		svt_ob->set_double_param("carbon_thickness", carbon_thickness);
-		svt_ob->set_double_param("carbon_length", carbon_length[ilayer]);
-		svt_ob->set_double_param("carbon_width", carbon_width);
+		svt_ob->set_double_param("carbon_thickness", ePIC_SVTOB::carbon_thickness);
+		svt_ob->set_double_param("carbon_length", ePIC_SVTOB::carbon_length[ilayer]);
+		svt_ob->set_double_param("carbon_width", ePIC_SVTOB::carbon_width);
 		// LAS geo 
-		svt_ob->set_double_param("si_thickness", si_thickness);
-		svt_ob->set_double_param("si_length", si_length[ilayer]);
-		svt_ob->set_double_param("si_width", si_width);
-		svt_ob->set_double_param("si_carbon_gap", si_carbon_gap);
-		svt_ob->set_int_param("n_silicon_z", n_silicon_z[ilayer]);
-		svt_ob->set_int_param("n_stave_phi", n_stave_phi[ilayer]);
+		svt_ob->set_double_param("si_thickness", ePIC_SVTOB::si_thickness);
+		svt_ob->set_double_param("si_length", ePIC_SVTOB::si_length[ilayer]);
+		svt_ob->set_double_param("si_width", ePIC_SVTOB::si_width);
+		svt_ob->set_int_param("n_silicon_z", ePIC_SVTOB::n_silicon_z[ilayer]);
+		svt_ob->set_int_param("n_stave_phi", ePIC_SVTOB::n_stave_phi[ilayer]);
 
 		// overlaps of LAS
 		
-		svt_ob->set_double_param("las_overlap", las_overlap[ilayer]);
+		svt_ob->set_double_param("las_overlap", ePIC_SVTOB::las_overlap[ilayer]);
+		svt_ob->set_double_param("lec_length", ePIC_SVTOB::lec_length);
+		svt_ob->set_double_param("rec_length", ePIC_SVTOB::rec_length);
+		svt_ob->set_double_param("anc_length", ePIC_SVTOB::anc_length);
+		svt_ob->set_double_param("anc_thickness", ePIC_SVTOB::anc_thickness);
+		svt_ob->set_double_param("las_airspace", ePIC_SVTOB::las_airspace);
+		svt_ob->set_double_param("periphery_width", ePIC_SVTOB::periphery_width);
+		svt_ob->set_double_param("kapton_thickness", ePIC_SVTOB::kapton_thickness);
 		
 		svt_ob->SetActive();
 //		svt_ob->SuperDetector("SVTOB");
@@ -130,20 +150,20 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 		svt_ob->OverlapCheck(OverlapCheck);
 		g4Reco->registerSubsystem(svt_ob);
 
-		SVTOBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilter, ilayer, (r_inner[ilayer]+r_outer[ilayer])/2., false);//true);
-		SVTOBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterInnerTrack, ilayer, (r_inner[ilayer]+r_outer[ilayer])/2., false);
-		SVTOBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterSiliconTrack, ilayer, (r_inner[ilayer]+r_outer[ilayer])/2., false);
+		SVTOBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilter, ilayer, (ePIC_SVTOB::r_inner[ilayer]+ePIC_SVTOB::r_outer[ilayer])/2., false);//true);
+		SVTOBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterInnerTrack, ilayer, (ePIC_SVTOB::r_inner[ilayer]+ ePIC_SVTOB::r_outer[ilayer])/2., false);
+		SVTOBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterSiliconTrack, ilayer, (ePIC_SVTOB::r_inner[ilayer]+ ePIC_SVTOB::r_outer[ilayer])/2., false);
 	
 	
 	}
 
 	// update the BlackHole geometry 
-	BlackHoleGeometry::max_radius = r_outer[nlayers-1];
-	BlackHoleGeometry::min_z = -carbon_length[nlayers-1]/2.;
-	BlackHoleGeometry::max_z = carbon_length[nlayers-1]/2.;
-	BlackHoleGeometry::gap = gap;
+	BlackHoleGeometry::max_radius = ePIC_SVTOB::r_outer[nlayers-1];
+	BlackHoleGeometry::min_z = -ePIC_SVTOB::carbon_length[nlayers-1]/2.;
+	BlackHoleGeometry::max_z = ePIC_SVTOB::carbon_length[nlayers-1]/2.;
+	BlackHoleGeometry::gap = no_overlapp;
 
-	return r_outer[nlayers-1];
+	return ePIC_SVTOB::r_outer[nlayers-1];
 }
 
 #endif

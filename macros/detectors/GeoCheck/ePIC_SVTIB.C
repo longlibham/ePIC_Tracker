@@ -87,7 +87,7 @@ int ePIC_SVTIB(const int nEvents = 10000, bool use_pt = false, const double pmin
 	//
 	// build my SVT IB layers
 	//
-	int ib_layers = 3;
+	int ib_layers = 1;
     double si_radius[3] = {3.6, 4.8, 12.0};
     double si_thickness = 50e-4;
     double length = 27.;

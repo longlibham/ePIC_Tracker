@@ -106,29 +106,6 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	// try non default physics lists
 	// g4Reco->SetPhysicsList("FTFP_BERT_HP")
 
-	//
-	//build SVT IB layers
-	//
-	const int ib_layers = 3;
-	double si_thickness = 0.005;  //was 0.005 cm by default
-	double svxrad[ib_layers] = {3.6, 4.8, 12.0};
-	double length[ib_layers] = {27., 27., 27.};  // -1 use eta coverage to determine length
-	PHG4CylinderSubsystem *cyl;
-	// here is our silicon:
-	for (int ilayer = 0; ilayer < ib_layers; ilayer++)
-	{
-		cyl = new PHG4CylinderSubsystem("SVTX", ilayer);
-		cyl->set_double_param("radius", svxrad[ilayer]);
-		cyl->set_string_param("material", "G4_Si");  // Silicon (G4 definition)
-		cyl->set_double_param("thickness", si_thickness);
-		cyl->SetActive();
-		cyl->SuperDetector("SVTX");
-		if (length[ilayer] > 0)
-		{
-		  cyl->set_double_param("length", length[ilayer]);
-		}
-		g4Reco->registerSubsystem(cyl);
-	  }
 		
 	//
 	// build my SVT OB layers
@@ -136,14 +113,22 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	// L3/L4 OB
 	double r_inner[2] = {27.1, 41.8};
 	double r_outer[2] = {27.7, 42.4};
-	double carbon_thickness = 0.5*0.03;//0.5*0.03;
+	double carbon_thickness = 0.5;//0.5*0.03;
    	double carbon_length[2] = {54.31, 83.75};
 	double carbon_width = 3.92;
 	//double si_thickness = 0.005;
-	si_thickness = 0.05/100.*9.37; //0.005;
+	double si_thickness = 0.05/100.*9.37; //0.005;
 	double si_length[2] = {15.0529, 12.8880};
-	double si_width = 3.3128;
-	double si_carbon_gap = 0.5;
+	double si_width = 3.9128;
+
+	double lec_length = 0.45;
+	double rec_length = 0.15;
+	double anc_length = 1.0;
+	double anc_thickness = 0.03;
+	double las_airspace = 0.45;
+	double peri_width = 0.0525;
+	double kapton_thickness = 0.005;
+
 	int n_silicon_z[2] = {4, 8};
 	int n_stave_phi[2] = {46, 70};
 	double las_overlap[2] = {2.55, 2.98};
@@ -165,7 +150,15 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 		svt_ob->set_double_param("si_thickness", si_thickness);
 		svt_ob->set_double_param("si_length", si_length[i]);
 		svt_ob->set_double_param("si_width", si_width);
-		svt_ob->set_double_param("si_carbon_gap", si_carbon_gap);
+		svt_ob->set_double_param("lec_length", lec_length);
+		svt_ob->set_double_param("rec_length", rec_length);
+		svt_ob->set_double_param("anc_length", anc_length);
+		svt_ob->set_double_param("anc_thickness", anc_thickness);
+		svt_ob->set_double_param("las_airspace", las_airspace);
+		svt_ob->set_double_param("periphery_width", peri_width);
+		svt_ob->set_double_param("kapton_thickness", kapton_thickness);
+
+
 		svt_ob->set_int_param("n_silicon_z", n_silicon_z[i]);
 		svt_ob->set_int_param("n_stave_phi", n_stave_phi[i]);
 
@@ -174,6 +167,7 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 		svt_ob->set_double_param("las_overlap", las_overlap[i]);
 		
 		svt_ob->SetActive();
+		svt_ob->OverlapCheck(1);
 //		svt_ob->SuperDetector("SVTOB");
 		
 		g4Reco->registerSubsystem(svt_ob);
@@ -184,7 +178,7 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 
 	// Black hole swallows everything - prevent loopers from returning
 	// to inner detectors, length is given by default eta = +- 1.1 range
-//	PHG4CylinderSubsystem* cyl;
+	PHG4CylinderSubsystem* cyl;
 	cyl = new PHG4CylinderSubsystem("BlackHole", 0);
 	cyl->set_double_param("radius", 80);
 	cyl->set_double_param("thickness", 0.1);
@@ -210,18 +204,7 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	
 	kalman->set_sub_top_node_name("SVTX");
 	kalman->set_trackmap_out_name("SvtxTrackMap");
-	
-	
-	kalman->add_phg4hits(
-			"G4HIT_SVTX",					//const std::string& phg4hitsNames,
-			PHG4TrackFastSim::Cylinder, 	// const DETECTOR_TYPE phg4dettype,	Vertical_Plane/Cylinder
-			50e-4,							//radial-resolution [cm]
-			5e-4, 							//azimuthal-resolution [cm]
-			5e-4, 							//z-resolution [cm]
-			1, 								//efficiency
-			0 								//noise hits
-			);
-	
+
 	// SVT OB
 	ostringstream oss;
 	for(int i = 0; i < ob_layers; i++){

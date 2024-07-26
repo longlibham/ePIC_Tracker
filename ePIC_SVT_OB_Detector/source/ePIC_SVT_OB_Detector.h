@@ -45,6 +45,7 @@ class ePIC_SVT_OB_Detector : public PHG4Detector{
 
 	private:
 		PHParameters* m_Params;
+		double m_nooverlap = 0.005;
 		std::set<G4VPhysicalVolume*> m_PhysicalVolumesSet;
 		std::string m_SuperDetector;
 		int m_Layer;

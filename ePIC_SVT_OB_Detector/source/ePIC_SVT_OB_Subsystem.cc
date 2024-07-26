@@ -117,10 +117,16 @@ void ePIC_SVT_OB_Subsystem::SetDefaultParameters(){
 	set_default_double_param("si_thickness", 0.);
 	set_default_double_param("si_length", 0.);
 	set_default_double_param("si_width", 0.);
-	set_default_double_param("si_carbon_gap", 0.);
 	set_default_int_param("n_silicon_z", 0);
 	set_default_int_param("n_stave_phi", 0);
 	set_default_double_param("las_overlap", 0.);
+	set_default_double_param("lec_length", 0.);
+	set_default_double_param("rec_length", 0.);
+	set_default_double_param("anc_length", 0.);
+	set_default_double_param("anc_thickness", 0.);
+	set_default_double_param("las_airspace", 0.);
+	set_default_double_param("periphery_width", 0.);
+	set_default_double_param("kapton_thickness", 0.);
 
 
 	// place holder, will be replaced by world material if not set by other means(macro)

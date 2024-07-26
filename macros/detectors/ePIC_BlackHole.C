@@ -36,7 +36,7 @@ void BlackHole(PHG4Reco* g4Reco, double radius){
     if(radius < BlackHoleGeometry::max_radius){
         radius = BlackHoleGeometry::max_radius;
     }
-
+    double visable = 0.0;
     double blackhole_length = (BlackHoleGeometry::max_z - BlackHoleGeometry::min_z) + 2*BlackHoleGeometry::gap;
     double blackhole_zpos = BlackHoleGeometry::min_z - BlackHoleGeometry::gap + blackhole_length/2.;
     double blackhole_radius = radius + BlackHoleGeometry::gap; // make the black hole slightly larger than the radius
@@ -47,7 +47,7 @@ void BlackHole(PHG4Reco* g4Reco, double radius){
     blackhole->set_double_param("thickness", BlackHoleGeometry::gap/2.);  // it needs some thickness
 
     if(BlackHoleGeometry::visible){
-        blackhole->set_color(1, 1, 1, 0.5);
+        blackhole->set_color(1, 1, 1, visable);
     }
     blackhole->BlackHole();
     if(Enable::BLACKHOLE_SAVEHITS){
@@ -65,6 +65,7 @@ void BlackHole(PHG4Reco* g4Reco, double radius){
     // the endcap itself is BlackHoleGeometry::gap/2 thick, leaving BlackHoleGeometry::gap/4 on each side of the center.
     // Basically we have a gap of BlackHoleGeometry::gap to the radius of the endcap so particles trying to go through 
     // the tiny gap between barren and endplate will hit the endplate
+
     double blackhole_forward_zpos = blackhole_zpos + blackhole_length/2. + BlackHoleGeometry::gap/2.;
     blackhole = new PHG4CylinderSubsystem("BH_FORWARD_PLUS", 1);
     blackhole->SuperDetector("BH_FORWARD_PLUS");
@@ -73,7 +74,7 @@ void BlackHole(PHG4Reco* g4Reco, double radius){
     blackhole->set_double_param("length", BlackHoleGeometry::gap/2.);
     blackhole->set_double_param("place_z",blackhole_forward_zpos);
     if(BlackHoleGeometry::visible){
-        blackhole->set_color(1, 1, 1, 0.5);
+        blackhole->set_color(1, 1, 1, visable);
     }
     blackhole->BlackHole();
     if(Enable::BLACKHOLE_SAVEHITS && Enable::BLACKHOLE_FORWARD_SAVEHITS){
@@ -91,7 +92,7 @@ void BlackHole(PHG4Reco* g4Reco, double radius){
     blackhole->set_double_param("length", BlackHoleGeometry::gap/2.);
     blackhole->set_double_param("place_z",blackhole_backward_zpos);
     if(BlackHoleGeometry::visible){
-        blackhole->set_color(1, 1, 1, 0.5);
+        blackhole->set_color(1, 1, 1, visable);
     }
     blackhole->BlackHole();
     if(Enable::BLACKHOLE_SAVEHITS && Enable::BLACKHOLE_FORWARD_SAVEHITS){

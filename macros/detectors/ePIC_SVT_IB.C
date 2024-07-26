@@ -93,7 +93,7 @@ double ePIC_SVT_IB(PHG4Reco* g4Reco, const int nlayers = 3, double radius = 0){
 
 	ePIC_SVTIB_Subsystem* svt_ib;
 	for (int ilayer = 0; ilayer < nlayers; ilayer++){
-		svt_ib = new ePIC_SVTIB_Subsystem("SVTIB", ilayer);
+		svt_ib = new ePIC_SVTIB_Subsystem("SVTXIB", ilayer);
 		svt_ib->set_double_param("radius", SVTIB::si_radius[ilayer]);
 		svt_ib->set_double_param("si_thickness", SVTIB::si_mat/100.*9.37);
 		svt_ib->set_double_param("length", SVTIB::length);
