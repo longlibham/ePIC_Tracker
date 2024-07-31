@@ -41,7 +41,7 @@ R__LOAD_LIBRARY(libePIC_SVT_OB_Detector.so)
 using namespace std;
 
 namespace ePIC_SVTOB{
-	double carbon_thickness = 0.5;//0.5*0.03;
+	double carbon_x0 = 0.2;//0.5*0.03;
    	double carbon_length[2] = {54.31, 83.75};
 	double carbon_width = 3.92;
 	double si_thickness = 0.05/100.*9.37; //0.005;
@@ -123,12 +123,12 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 		svt_ob->set_double_param("r_inner", ePIC_SVTOB::r_inner[ilayer]);
 		svt_ob->set_double_param("r_outer", ePIC_SVTOB::r_outer[ilayer]);
 		// carbon support 
-		svt_ob->set_double_param("carbon_thickness", ePIC_SVTOB::carbon_thickness);
+		svt_ob->set_double_param("carbon_thickness", ePIC_SVTOB::carbon_x0/100*26.356);
 		svt_ob->set_double_param("carbon_length", ePIC_SVTOB::carbon_length[ilayer]);
 		svt_ob->set_double_param("carbon_width", ePIC_SVTOB::carbon_width);
 		// LAS geo 
 		svt_ob->set_double_param("si_thickness", ePIC_SVTOB::si_thickness);
-		svt_ob->set_double_param("si_length", ePIC_SVTOB::si_length[ilayer]);
+		svt_ob->set_double_param("si_length", ePIC_SVTOB::si_length[ilayer]+ePIC_SVTOB::lec_length+ePIC_SVTOB::rec_length);
 		svt_ob->set_double_param("si_width", ePIC_SVTOB::si_width);
 		svt_ob->set_int_param("n_silicon_z", ePIC_SVTOB::n_silicon_z[ilayer]);
 		svt_ob->set_int_param("n_stave_phi", ePIC_SVTOB::n_stave_phi[ilayer]);

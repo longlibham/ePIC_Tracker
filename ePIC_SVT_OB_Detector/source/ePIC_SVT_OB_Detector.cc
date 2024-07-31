@@ -353,15 +353,18 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 			G4ThreeVector position = G4ThreeVector(px, py, pz);
 			G4Transform3D transform = G4Transform3D(rotm, position);
 
+			G4VPhysicalVolume* las_sensor_phys = 
 			new G4PVPlacement(
 						transform,
-						las_sensor_logic,//airbox_logic,
-						"LAS",
+						las_sensor_logic, //airbox_logic,
+						"LAS_stave",
 						logicWorld,
 						0,
 						i*nphi +j,
 						OverlapCheck()
 					);
+
+			m_PhysicalVolumesSet.insert(las_sensor_phys);
 
 		}
 

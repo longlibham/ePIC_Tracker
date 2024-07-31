@@ -79,13 +79,17 @@ void ePIC_SVTIB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     }
 
     G4VSolid* si_cyl = new G4Tubs("si_cylinder", radius, radius + si_thickness, rsu_length/2., 0., 2*M_PI);
-    G4VSolid* si_sub = new G4Box("si_substract", peri_width/2., (si_thickness+m_redundancy)/2., (rsu_length + m_redundancy)/2.);
+    G4VSolid* si_sub = NULL;
+    if (peri_width > 0) si_sub = new G4Box("si_substract", peri_width/2., (si_thickness+m_redundancy)/2., (rsu_length + m_redundancy)/2.);
 
     // subtract the insensitive periphery area.
     G4VSolid* si_sensitive_solid = nullptr;
     ostringstream oss;
 
     for(int i = 0; i < nphi; i++){
+        
+        if(peri_width <= 0) continue;  // for no dead area.
+
         double phi = i * 2*M_PI/nphi;
         G4RotationMatrix rotm = G4RotationMatrix();
         rotm.rotateZ(M_PI/2. + phi);
@@ -110,7 +114,12 @@ void ePIC_SVTIB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     G4NistManager* nist = G4NistManager::Instance();
     G4Material* mat_si = nist->FindOrBuildMaterial("G4_Si");
 
-    G4LogicalVolume* si_sen_logic = new G4LogicalVolume(si_sensitive_solid, mat_si, "SiSensorLogic");
+    G4LogicalVolume* si_sen_logic = NULL;
+    if(si_sensitive_solid)
+        si_sen_logic = new G4LogicalVolume(si_sensitive_solid, mat_si, "SiSensorLogic");
+    else
+        si_sen_logic = new G4LogicalVolume(si_cyl, mat_si, "SiSensorLogic");
+
     G4VisAttributes* sensor_vis = new G4VisAttributes(col_si_sensitive);
     sensor_vis->SetForceSolid(true);
     si_sen_logic->SetVisAttributes(sensor_vis);
@@ -131,65 +140,67 @@ void ePIC_SVTIB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 
     m_PhysicalVolumesSet.insert(sensor_phy);
 
-    G4VSolid* insen_solid = new G4Box("Insensitive_si", peri_width/2., si_thickness/2., rsu_length/2.);
-    G4LogicalVolume* insen_logic = new G4LogicalVolume(insen_solid, mat_si, "SiSubLogic");
-    G4VisAttributes* insen_vis = new G4VisAttributes(col_si_insensitive);
-    insen_vis->SetForceSolid(true);
-    insen_logic->SetVisAttributes(insen_vis);
-      
-    for(int i = 0; i < nphi; i++){
-        double phi = i * 2*M_PI/nphi;
-        G4RotationMatrix rotm = G4RotationMatrix();
-        rotm.rotateZ(M_PI/2. + phi);
-        G4ThreeVector pos = G4ThreeVector(
-            radius*cos(phi),
-            radius*sin(phi),
-            0
-            );
+    if(peri_width > 0){ // for no dead area
+        G4VSolid* insen_solid = new G4Box("Insensitive_si", peri_width/2., si_thickness/2., rsu_length/2.);
+        G4LogicalVolume* insen_logic = new G4LogicalVolume(insen_solid, mat_si, "SiSubLogic");
+        G4VisAttributes* insen_vis = new G4VisAttributes(col_si_insensitive);
+        insen_vis->SetForceSolid(true);
+        insen_logic->SetVisAttributes(insen_vis);
+        
+        for(int i = 0; i < nphi; i++){
+            double phi = i * 2*M_PI/nphi;
+            G4RotationMatrix rotm = G4RotationMatrix();
+            rotm.rotateZ(M_PI/2. + phi);
+            G4ThreeVector pos = G4ThreeVector(
+                radius*cos(phi),
+                radius*sin(phi),
+                0
+                );
 
-        G4Transform3D transform = G4Transform3D(rotm, pos); 
+            G4Transform3D transform = G4Transform3D(rotm, pos); 
+            new G4PVPlacement(
+                transform,
+                insen_logic,
+                "insen_si_layer",
+                logicWorld,
+                0,
+                i,
+                OverlapCheck()
+            );
+        }
+    
+        // Left/right endcap
+        G4VSolid* lec_solid = new G4Tubs("lec_cylinder", radius, radius+si_thickness, lec_length/2., 0, 2*M_PI);
+        G4LogicalVolume* lec_logic = new G4LogicalVolume(lec_solid, mat_si, "LECLogic");
+        lec_logic->SetVisAttributes(insen_vis);
+
         new G4PVPlacement(
-            transform,
-            insen_logic,
-            "insen_si_layer",
+            nullptr,
+            G4ThreeVector(0, 0, -(rsu_length + lec_length)/2. ),
+            lec_logic,
+            "LeftEndcap_cyl",
             logicWorld,
             0,
-            i,
+            0,
             OverlapCheck()
         );
+
+        G4VSolid* rec_solid = new G4Tubs("rec_cylinder", radius, radius+si_thickness, rec_length/2., 0, 2*M_PI);
+        G4LogicalVolume* rec_logic = new G4LogicalVolume(rec_solid, mat_si, "RECLogic");
+        rec_logic->SetVisAttributes(insen_vis);
+
+        new G4PVPlacement(
+            nullptr,
+            G4ThreeVector(0, 0, (rsu_length + rec_length)/2. + 2*m_nooverlap),
+            rec_logic,
+            "RightEndcap_cyl",
+            logicWorld,
+            0,
+            0,
+            OverlapCheck()
+        );
+    
     }
-
-    // Left/right endcap
-    G4VSolid* lec_solid = new G4Tubs("lec_cylinder", radius, radius+si_thickness, lec_length/2., 0, 2*M_PI);
-    G4LogicalVolume* lec_logic = new G4LogicalVolume(lec_solid, mat_si, "LECLogic");
-    lec_logic->SetVisAttributes(insen_vis);
-
-    new G4PVPlacement(
-        nullptr,
-        G4ThreeVector(0, 0, -(rsu_length + lec_length)/2. ),
-        lec_logic,
-        "LeftEndcap_cyl",
-        logicWorld,
-        0,
-        0,
-        OverlapCheck()
-    );
-
-    G4VSolid* rec_solid = new G4Tubs("rec_cylinder", radius, radius+si_thickness, rec_length/2., 0, 2*M_PI);
-    G4LogicalVolume* rec_logic = new G4LogicalVolume(rec_solid, mat_si, "RECLogic");
-    rec_logic->SetVisAttributes(insen_vis);
-
-    new G4PVPlacement(
-        nullptr,
-        G4ThreeVector(0, 0, (rsu_length + rec_length)/2. + 2*m_nooverlap),
-        rec_logic,
-        "RightEndcap_cyl",
-        logicWorld,
-        0,
-        0,
-        OverlapCheck()
-    );
-
     
     return;
 

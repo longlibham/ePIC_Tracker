@@ -112,7 +112,7 @@ bool ePIC_SVT_OB_SteppingAction::UserSteppingAction(const G4Step* aStep, bool wa
 //	cout<< "time prepoint: " << prePoint->GetGlobalTime() << endl;
 //	cout<< "time postpoint: " << postPoint->GetGlobalTime() << endl;
 
-	cout<<"pre physical vol: "<<volume->GetName();
+	cout<<"pre physical vol: "<<volume->GetName()<<"\t";
 	cout<<"post physical vol: "<<touchpost->GetVolume()->GetName()<<endl;
 
 	switch (prePoint -> GetStepStatus()){
