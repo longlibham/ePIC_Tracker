@@ -54,9 +54,9 @@ def read_tree(Tfile, outfile):
         ptitle = 'p_{T}'
     
     title = '#Delta%s/%s;#Delta%s/%s;Entries/%d' %(ptitle, ptitle, ptitle, ptitle, round(0.2/bins, 5))     
-    h1 = ROOT.TH1D("h1", title, bins, 0.1, 0.1)
-    h3 = ROOT.TH1D("h3", "DCA_{T};DCA_{T};Entries/0.001cm", 100, 0.05, 0.05)
-    h4 = ROOT.TH1D("h4", "DCA_{Z};DCA_{Z};Entries/0.001cm", 100, 0.05, 0.05)
+    h1 = ROOT.TH1D("h1", title, bins, -0.1, 0.1)
+    h3 = ROOT.TH1D("h3", "DCA_{T};DCA_{T} [#mum];Entries/0.001cm", 100, -0.05, 0.05)
+    h4 = ROOT.TH1D("h4", "DCA_{Z};DCA_{Z} [#mum];Entries/0.001cm", 100, -0.05, 0.05)
 
     entries = tree.GetEntries()
     np_px = np.zeros(entries)
@@ -140,9 +140,11 @@ def read_tree(Tfile, outfile):
 
     dp_mean, dp_std = frp_p.Parameter(1)*100, frp_p.Parameter(2)*100
     dcat_mean, dcat_std, dcaz_mean, dcaz_std = frp_dcat.Parameter(1)*10000, frp_dcat.Parameter(2)*10000, frp_dcaz.Parameter(1)*10000, frp_dcaz.Parameter(2)*10000 # unit %, um
+    
+    e_entries = h1.GetEntries()
 
     Tfile.Close()
-    return dp_mean, dp_std, dcat_mean, dcat_std, dcaz_mean, dcaz_std
+    return dp_mean, dp_std, dcat_mean, dcat_std, dcaz_mean, dcaz_std, e_entries
 
 def process_tree(args):
     pgen = array('d')
@@ -152,18 +154,21 @@ def process_tree(args):
     dcat_std = array('d')
     dcaz_mean = array('d')
     dcaz_std = array('d')
+    entries_d = array('d')
     # p/pt fixed
     fixed = ''
     config = ''
+    total_evts = 10000
     for i, each in enumerate(args.file_in):
         f = ROOT.TFile(each,"READ")
-        p_m, p_s, dcat_m, dcat_s, dcaz_m, dcaz_s = read_tree(f, each)
+        p_m, p_s, dcat_m, dcat_s, dcaz_m, dcaz_s, e_entries = read_tree(f, each)
         dp_mean.append(p_m)
         dp_std.append(p_s)
         dcat_mean.append(dcat_m)
         dcat_std.append(dcat_s)
         dcaz_mean.append(dcaz_m)
         dcaz_std.append(dcaz_s)
+        entries_d.append(e_entries/total_evts*100)
 
         p_num = float(each.split("_")[-1].split("G")[0].split("-")[0])
         pgen.append(p_num)
@@ -175,6 +180,7 @@ def process_tree(args):
     ge1 = ROOT.TGraph(num, pgen, dp_std)
     ge3 = ROOT.TGraph(num, pgen, dcat_std)
     ge4 = ROOT.TGraph(num, pgen, dcaz_std)
+    ge2 = ROOT.TGraph(num, pgen, entries_d)
     
     c2 = ROOT.TCanvas('c2', 'c2', 1800, 1200)
     c2.Divide(2,2)
@@ -197,6 +203,12 @@ def process_tree(args):
     ge1.GetYaxis().SetTitle(ytitle)
     ge1.Draw("AP")
     
+    c2.cd(2)
+    ge2.SetName('Eff')
+    ge2.GetXaxis().SetTitle(xtitle)
+    ge2.GetYaxis().SetTitle('Eff. [%]')
+    ge2.GetYaxis().SetRangeUser(0, 105)
+    ge2.Draw("AP")
 
     c2.cd(3)
     ge3.SetName('DCAT')
@@ -215,6 +227,7 @@ def process_tree(args):
 
     outroot = ROOT.TFile(f'outroot/Summary_{config}_{fixed}.root', 'RECREATE')
     ge1.Write()
+    ge2.Write()
     ge3.Write()
     ge4.Write()
 

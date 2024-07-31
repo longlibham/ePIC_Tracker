@@ -21,6 +21,7 @@ def comparison_plot(args):
     mgp = TMultiGraph()
     mgdcat = TMultiGraph()
     mgdcaz = TMultiGraph()
+    mgeff = TMultiGraph()
     
     fixed = ''
     for i, each in enumerate(args.root_input):
@@ -31,6 +32,7 @@ def comparison_plot(args):
         gep = f.Get('Momentum')
         gedcat = f.Get('DCAT')
         gedcaz = f.Get('DCAZ')
+        geeff = f.Get('Eff')
 
 
         gep.SetLineColor(i+1)
@@ -39,6 +41,13 @@ def comparison_plot(args):
         gep.SetName(title)
         gep.SetTitle(title)
         mgp.Add(gep, 'AP')
+
+        geeff.SetLineColor(i+1)
+        geeff.SetMarkerSize(1.2)
+        geeff.SetMarkerColor(i+1)
+        geeff.SetName(title)
+        geeff.SetTitle(title)
+        mgeff.Add(geeff, 'AP')
 
         gedcat.SetLineColor(i+1)
         gedcat.SetMarkerSize(1.2)
@@ -62,19 +71,25 @@ def comparison_plot(args):
     xtitle = ''
     if fixed == 'p':
         xtitle = 'p [GeV]'
-        ytitle = '#Deltap/p [%]'
+        ytitle = '#sigma_{p}/p [%]'
     else:
         xtitle = 'p_{T} [GeV]'
-        ytitle = '#Deltap_{T}/p_{T} [%]'
+        ytitle = '#sigma_{p_{T}}/p_{T} [%]'
     mgp.GetXaxis().SetTitle(xtitle)
     mgp.GetYaxis().SetTitle(ytitle)
     mgp.GetYaxis().SetRangeUser(0, 2.5)
     mgp.Draw("AP")
 
-    lgd = pad1.BuildLegend(0.15, 0.5, 0.4, 0.8)
+    lgd = pad1.BuildLegend(0.15, 0.5, 0.55, 0.8)
     lgd.SetTextFont(62)
     lgd.SetFillColorAlpha(0,0)
     lgd.SetBorderSize(0)
+
+    c1.cd(2)
+    mgeff.GetXaxis().SetTitle(xtitle)
+    mgeff.GetYaxis().SetTitle('Eff. [%]')
+    mgeff.GetYaxis().SetRangeUser(0, 105)
+    mgeff.Draw("AP")
 
     c1.cd(3)
 
