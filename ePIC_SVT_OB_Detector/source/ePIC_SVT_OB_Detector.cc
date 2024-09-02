@@ -17,8 +17,11 @@
 #include <g4main/PHG4Detector.h>
 
 #include <Geant4/G4Box.hh>
+#include <Geant4/G4Tubs.hh>
 #include <Geant4/G4Color.hh>
+#include <Geant4/G4UnionSolid.hh>
 #include <Geant4/G4SubtractionSolid.hh>
+#include <Geant4/G4IntersectionSolid.hh>
 #include <Geant4/G4LogicalVolume.hh>
 #include <Geant4/G4Material.hh>
 #include <Geant4/G4NistManager.hh>
@@ -55,6 +58,12 @@ int ePIC_SVT_OB_Detector::IsInDetector(G4VPhysicalVolume* volume) const{
 	return 0;
 }
 
+void ePIC_SVT_OB_Detector::DefineMaterials(){
+
+	cout<<*(G4Material::GetMaterialTable())<<endl;
+
+}
+
 void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	// get essential parameter passing from PHParameters
 	double r_inner = m_Params->get_double_param("r_inner") * cm;
@@ -63,10 +72,28 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	double c_t = m_Params->get_double_param("carbon_thickness") * cm;
 	double c_l = m_Params->get_double_param("carbon_length") * cm;
 	double c_w = m_Params->get_double_param("carbon_width") * cm;
+	double cf_curve_radius = m_Params->get_double_param("cf_curve_radius") * cm;
+	double cf_center_height = m_Params->get_double_param("cf_center_height") * cm;
+	double cf_edge_height = m_Params->get_double_param("cf_edge_height") * cm;
+	double cf_margin = m_Params->get_double_param("cf_margin") * cm;
+	double cf_lec = m_Params->get_double_param("cf_leftendcap") * cm;
+	double cf_rec = m_Params->get_double_param("cf_rightendcap") * cm;
+
+	// o-rings for cooling
+	double oring_r = m_Params->get_double_param("oring_radius") * cm;
+	double oring_spacing = m_Params->get_double_param("oring_spacing")*cm;
+	
+	// c-support cf
+	double cf_csupport_width = m_Params->get_double_param("cf_csupport_width")*cm;
+
+	//for K9 foam
+	double k9_center_height = m_Params->get_double_param("k9_center_height")*cm; 
+
 	// silicon geo parameters
 	double si_t = m_Params->get_double_param("si_thickness") * cm;
 	double si_l = m_Params->get_double_param("si_length") * cm;
 	double si_w = m_Params->get_double_param("si_width") * cm;
+
 
 	double lec_length = m_Params->get_double_param("lec_length") * cm;
 	double rec_length = m_Params->get_double_param("rec_length") * cm;
@@ -81,11 +108,11 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	int  nz = m_Params->get_int_param("n_silicon_z");
 	int  nphi = m_Params->get_int_param("n_stave_phi");
 	
-	// overlaps of LAS
-	double las_ol = m_Params->get_double_param("las_overlap") * cm;
+	// // overlaps of LAS
+	// double las_ol = m_Params->get_double_param("las_overlap") * cm;
 
-	double las_tot = si_l*nz - las_ol*(nz-1);
-	double z_align = (c_l - las_tot)/2.;
+	// double las_tot = si_l*nz - las_ol*(nz-1);
+	// double z_align = (c_l - las_tot)/2.;
 
 	if(!std::isfinite(r_inner) || !std::isfinite(r_outer) || !std::isfinite(c_t)||
 			!std::isfinite(c_l) || !std::isfinite(c_w) || !std::isfinite(si_t) || 
@@ -104,271 +131,658 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	G4Colour col_si_insensitive = G4Colour(185./255., 99./255., 83./255., 1.);
 	G4Colour col_air = G4Colour(126./255., 134./255., 134./255., 0.);
 	G4Colour col_kapton = G4Colour(45./255., 179./255., 7./255., .7);
+	G4Colour col_k9foam = G4Colour(137./255., 248./255., 173./255., 1.);
 
+
+	// construct curved carbon stave
+	// cout<<*(G4Material::GetMaterialTable())<<endl;
 	G4NistManager* nist = G4NistManager::Instance();
 	G4Material* mat_cf = nist->FindOrBuildMaterial("CF");
-	G4VSolid* c_stave = new G4Box("SVT_OB_stave", c_w/2.0, c_t/2.0, c_l/2.0);
-	G4LogicalVolume* stave_logical = new G4LogicalVolume(c_stave, mat_cf, "StaveLogical");
+	G4Material* mat_air = nist->FindOrBuildMaterial("G4_AIR");
+	G4Material* mat_kapton = nist->FindOrBuildMaterial("G4_KAPTON");
+
+
+	// G4VisAttributes
 	G4VisAttributes* c_vis = new G4VisAttributes(G4Color(G4Colour::Grey()));
 	c_vis->SetForceSolid(true);
-	stave_logical->SetVisAttributes(c_vis);
-
-	// build the air box to contain the las
-	G4Material* mat_air = nist->FindOrBuildMaterial("G4_AIR");
-	double airbox_length = anc_length + las_airspace + lec_length + si_l + rec_length;
-	double airbox_thickness = anc_thickness + kapton_thickness;
-	G4VSolid* airbox = new G4Box("airbox", si_w/2., airbox_thickness/2., airbox_length/2.);
-	G4LogicalVolume* airbox_logic = new G4LogicalVolume(airbox, mat_air, "AirBoxLogic");
 	G4VisAttributes* air_vis = new G4VisAttributes(col_air);
 	air_vis->SetForceSolid(1);
-	airbox_logic->SetVisAttributes(air_vis);
-	
-	// build LAS
-	G4Material* mat_si = nist->FindOrBuildMaterial("G4_Si");
-	G4VSolid* las_box = new G4Box("LAS_box", si_w/2.0, si_t/2.0, si_l/2.0);
-	G4VSolid* sub_box = new G4Box("sub_box", (peri_width + m_nooverlap*cm)/2., 10., (si_l + m_nooverlap*cm)/2. );
-
-	G4VSolid* sen_box = new G4SubtractionSolid("LAS_sub0", las_box, sub_box, 0,  
-	G4ThreeVector(-(si_w - peri_width)/2., 0., 0.));
-	sen_box = new G4SubtractionSolid("LAS_sub1", sen_box, sub_box, 0,
-	G4ThreeVector(-peri_width/2., 0., 0.));
-	sen_box = new G4SubtractionSolid("LAS_sub2", sen_box, sub_box, 0,  
-	G4ThreeVector(peri_width/2., 0., 0.));
-	sen_box = new G4SubtractionSolid("LAS_sensitive", sen_box, sub_box, 0, 
-	G4ThreeVector((si_w - peri_width)/2., 0., 0.));
-
-	G4LogicalVolume* las_logical = new G4LogicalVolume(sen_box, mat_si, "LASLogial");
+	G4VisAttributes* kapton_vis = new G4VisAttributes(col_kapton);
+	kapton_vis->SetForceSolid(1);
+	G4VisAttributes* k9foam_vis = new G4VisAttributes(col_k9foam);
+	k9foam_vis->SetForceSolid(1);
 	G4VisAttributes* las_vis = new G4VisAttributes(G4Color(G4Colour::Yellow()));
 	las_vis->SetForceSolid(true);
-	las_logical->SetVisAttributes(las_vis);
 
-	G4LogicalVolume* las_sensor_logic = new G4LogicalVolume(las_box, mat_si, "LASensorLogic");
-	las_sensor_logic->SetVisAttributes(las_vis);
 
-	G4VPhysicalVolume* las_phys = 
+	double tub_rinner = 0.;
+	double tub_router = cf_curve_radius;
+	double tub_length = c_l + cf_lec + cf_rec;
+	double stave_length = tub_length;
+	double sta_phi = 0;
+	double sto_phi = 2*M_PI;
+
+	G4VSolid* cf_tub1 = new G4Tubs("carbon_tub1", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+	G4VSolid* cf_tub2 = new G4Tubs("carbon_tub2", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+
+	G4VSolid* cf_stave = nullptr;
+	cf_stave = new G4IntersectionSolid("cf_stave_curved", cf_tub1, cf_tub2, nullptr, G4ThreeVector(0, 2*cf_curve_radius - cf_center_height, 0));
+
+	// polish the edge
+	double intersection_chord_length = 2*sqrt(
+		cf_curve_radius*cf_curve_radius -
+		(cf_curve_radius - cf_center_height/2.)*(cf_curve_radius - cf_center_height/2.)
+	);
+	double strip_x = cf_edge_height/2.*(cf_curve_radius - cf_center_height/2.)*2/intersection_chord_length;
+	strip_x = intersection_chord_length/2. - si_w/2.- cf_margin;
+
+
+	double box_x = 2*strip_x;
+	double box_y = 100.;
+	double box_z = stave_length + 10*m_nooverlap;
+	G4VSolid* cf_strip_box = new G4Box("strip_box", box_x/2., box_y/2., box_z/2.);
+	cf_stave = new G4SubtractionSolid("cf_stave_strip_left", cf_stave, cf_strip_box, nullptr, 
+		G4ThreeVector(-intersection_chord_length/2., cf_curve_radius - cf_center_height/2., 0));
+	cf_stave = new G4SubtractionSolid("cf_stave_strip_right", cf_stave, cf_strip_box, nullptr,
+		G4ThreeVector(intersection_chord_length/2., cf_curve_radius - cf_center_height/2., 0));
+		
+
+	// stave container
+	tub_length += m_nooverlap;
+	cf_tub1 = new G4Tubs("carbon_tub1", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+	cf_tub2 = new G4Tubs("carbon_tub2", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+	G4VSolid* cf_stave_container = new G4IntersectionSolid("cf_stave_container", cf_tub1, cf_tub2, nullptr,
+		G4ThreeVector(0, 2*cf_curve_radius - cf_center_height - 2*anc_thickness - 2*kapton_thickness - 2*c_t, 0.));
+	
+
+	G4LogicalVolume* cf_stave_container_logic = new G4LogicalVolume(cf_stave_container, mat_air, "StaveContainerLogic");
+	cf_stave_container_logic->SetVisAttributes(air_vis);
+
+
+	// // strip the center
+	box_x = si_w;//intersection_chord_length - 2*strip_x - cf_margin;
+	box_y = 1. * cm;
+	box_z = stave_length - 2*c_t - 2*m_nooverlap;
+
+	cf_strip_box = new G4Box("strip_box_center", box_x/2., box_y/2., box_z/2.);
+	cf_stave = new G4SubtractionSolid("cf_stave_strip_center", cf_stave, cf_strip_box, nullptr, 
+		G4ThreeVector(0, cf_curve_radius - cf_center_height/2., 0.));
+
+
+
+	// o-rings
+	G4VSolid* cf_strip_oring = new G4Tubs("strip_oring", 0., oring_r, c_t + m_nooverlap, 0., 2*M_PI);
+	cf_stave = new G4SubtractionSolid("cf_stave_strip_oring_left", cf_stave, cf_strip_oring, nullptr,
+		G4ThreeVector(-(oring_spacing+oring_r), cf_curve_radius - cf_center_height/2., -stave_length/2.));
+	cf_stave = new G4SubtractionSolid("cf_stave_strip_oring_right", cf_stave, cf_strip_oring, nullptr,
+		G4ThreeVector((oring_spacing+oring_r), cf_curve_radius - cf_center_height/2., -stave_length/2.));
+	
+	//C-shape support structure
+	box_x = cf_csupport_width;
+	box_y = k9_center_height + 2*c_t;
+	G4VSolid* cf_csupport_box = new G4Box("cf_csupport_box", box_x/2., box_y/2., box_z/2.);
+	
+	box_y = box_y - 2*c_t;
+	box_z = box_z + 2*c_t;
+	G4VSolid* cf_csupport_sub = new G4Box("cf_csupport_sub", box_x/2., box_y/2., box_z/2.);
+	
+	G4VSolid* cf_csupport_solid = nullptr;
+	cf_csupport_solid = new G4SubtractionSolid("cf_csupport_subleft", cf_csupport_box, cf_csupport_sub, nullptr,
+		G4ThreeVector(-(c_t+box_x)/2., 0., 0.));
+	cf_csupport_solid = new G4SubtractionSolid("cf_csupport_subright", cf_csupport_solid, cf_csupport_sub, nullptr,
+		G4ThreeVector((c_t+box_x)/2., 0., 0.));
+
+	G4LogicalVolume* cf_csupport_logic = new G4LogicalVolume(cf_csupport_solid, mat_cf, "CSupportLogic");
+	cf_csupport_logic->SetVisAttributes(c_vis);
+
+	
+	
+	//shell surface
+	tub_rinner = cf_curve_radius;
+	tub_router = cf_curve_radius + c_t;
+	tub_length = stave_length;
+	sta_phi = 0;
+	sto_phi =si_w/cf_curve_radius;
+
+	G4VSolid* cf_shell_top = new G4Tubs("cf_shell_top", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+	G4VSolid* cf_shell_bot = new G4Tubs("cf_shell_bot", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+
+	box_x = 10.*cm;
+	box_y = si_w*2.+ m_nooverlap;
+	box_z = lec_length + si_l + rec_length;
+
+	cf_strip_box = new G4Box("strip_box", box_x/2., box_y/2., box_z/2.);
+	double posx = 0.;
+	double posy = 0.;
+	double posz = 0.;
+
+	G4RotationMatrix rotm = G4RotationMatrix();
+	
+	G4Transform3D trans; //G4Transform3D(rotm, G4ThreeVector(0, cf_center_height, 0));
+
+
+	for(int j = 0; j<nz/2; j++){  // n in z-axis
+
+		posy = si_w/2.;
+		
+		posz = -stave_length/2. + cf_lec + j*(box_z + si_l) + box_z/2.;
+		posx = cf_curve_radius;
+
+		cf_shell_top = new G4SubtractionSolid("cf_shell_top", cf_shell_top, cf_strip_box, nullptr,
+			G4ThreeVector(posx, posy, posz));
+
+		posz = -stave_length/2. + cf_lec + (j+1)*si_l + j*box_z + box_z/2.;
+		cf_shell_bot = new G4SubtractionSolid("cf_shell_bot", cf_shell_bot, cf_strip_box, nullptr,
+			G4ThreeVector(posx, posy, posz)); 
+	}
+
+
+	G4LogicalVolume* cf_stave_logic = new G4LogicalVolume(cf_stave, mat_cf, "CFLogical");
+	cf_stave_logic->SetVisAttributes(c_vis);
+
 	new G4PVPlacement(
 		nullptr,
-		G4ThreeVector(0, 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-		las_logical,
-		"las_sensor",
-		airbox_logic,
+		G4ThreeVector(0, -anc_thickness - kapton_thickness - c_t, 0),
+		cf_stave_logic,
+		"CF_stave",
+		cf_stave_container_logic,
 		0,
 		0,
 		OverlapCheck()
 	);
-	m_PhysicalVolumesSet.insert(las_phys);
 
+	G4LogicalVolume* cf_shell_top_logic = new G4LogicalVolume(cf_shell_top, mat_cf, "CF_ShellTOPLogic");
+	cf_shell_top_logic->SetVisAttributes(c_vis);
+
+	rotm.rotateZ(M_PI/2. - si_w/(2*cf_curve_radius));
+	trans = G4Transform3D(rotm, G4ThreeVector(0., -anc_thickness -kapton_thickness, 0.));
+	new G4PVPlacement(
+		trans,
+		cf_shell_top_logic,
+		"CF_ShellTOP",
+		cf_stave_container_logic,
+		0,
+		0,
+		0
+	);
+
+	G4LogicalVolume* cf_shell_bot_logic = new G4LogicalVolume(cf_shell_bot, mat_cf, "CF_ShellBOTLogic");
+	cf_shell_bot_logic->SetVisAttributes(c_vis);
+
+	rotm.rotateZ(M_PI);
+	double cf_stave_container_ymin = cf_curve_radius - cf_center_height -2*anc_thickness -2*kapton_thickness; 
+	trans = G4Transform3D(rotm, G4ThreeVector(0., cf_stave_container_ymin + cf_curve_radius + anc_thickness + kapton_thickness, 0.));
+	new G4PVPlacement(
+		trans,
+		cf_shell_bot_logic,
+		"CF_ShellBOT",
+		cf_stave_container_logic,
+		0,
+		0,
+		0
+	);
+
+	//placement of the c-shape support
+	new G4PVPlacement(
+		nullptr,
+		G4ThreeVector(0., cf_curve_radius -anc_thickness -kapton_thickness - cf_center_height/2., (cf_lec - cf_rec)/2.),
+		cf_csupport_logic,
+		"CSupport_stave",
+		cf_stave_container_logic,
+		0,
+		0,
+		OverlapCheck()
+	);
+
+	// for the K9 foam
+	tub_rinner = 0.;
+	tub_router = cf_curve_radius;
+	tub_length = lec_length + rec_length;
+	sta_phi = 0.;
+	sto_phi = 2*M_PI;
+	G4VSolid* k9tub1 = new G4Tubs("k9tub1", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+	G4VSolid* k9tub2 = new G4Tubs("k9tub2", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+
+	G4VSolid* k9_curved_solid = new G4IntersectionSolid("k9_curved_solid", k9tub1, k9tub2, nullptr,
+		G4ThreeVector(0, 2*cf_curve_radius-k9_center_height, 0.));
+	
+	box_x = 10.*cm + m_nooverlap;
+	box_y = 10.*cm;
+	box_z = lec_length+rec_length+m_nooverlap;
+
+	cf_strip_box = new G4Box("strip_box", box_x/2., box_y/2., box_z/2.);
+	k9_curved_solid = new G4SubtractionSolid("k9_curved_strip_left", k9_curved_solid, cf_strip_box, nullptr,
+		G4ThreeVector(-(si_w + box_x - cf_margin - m_nooverlap)/2., cf_curve_radius-k9_center_height/2., 0.));
+	k9_curved_solid = new G4SubtractionSolid("k9_curved_strip_right", k9_curved_solid, cf_strip_box, nullptr,
+		G4ThreeVector((si_w + box_x - cf_margin - m_nooverlap)/2., cf_curve_radius-k9_center_height/2., 0.));
+
+	box_x = 2*c_t + m_nooverlap;
+	cf_strip_box = new G4Box("strip_box", box_x/2., box_y/2., box_z/2.);
+	k9_curved_solid = new G4SubtractionSolid("k9_curved_strip_center", k9_curved_solid, cf_strip_box, nullptr,
+		G4ThreeVector(0., cf_curve_radius-k9_center_height/2., 0.));
+
+	G4LogicalVolume* k9foam_logic = new G4LogicalVolume(k9_curved_solid, mat_cf, "K9FoamLogic");	
+	k9foam_logic->SetVisAttributes(k9foam_vis);
+
+	for(int i = 0; i<nz/4; i++){
+		posz = -stave_length/2. + cf_lec + i*(2*si_l + lec_length + rec_length) + (lec_length+rec_length)/2.;
+		posy = -anc_thickness -kapton_thickness -(cf_center_height - k9_center_height)/2.;
+		new G4PVPlacement(
+			nullptr,
+			G4ThreeVector(0., posy, posz),
+			k9foam_logic,
+			"k9_foam_phys",
+			cf_stave_container_logic,
+			0,
+			2*i,
+			OverlapCheck()
+		);
+
+		posz = stave_length/2. - cf_rec - si_l - i*(si_l + lec_length + rec_length) -(lec_length + rec_length)/2.;
+		new G4PVPlacement(
+			nullptr,
+			G4ThreeVector(0., posy, posz),
+			k9foam_logic,
+			"k9_foam_phys",
+			cf_stave_container_logic,
+			0,
+			2*i+1,
+			OverlapCheck()
+
+		);
+
+	}
+
+
+	// air box for LAS
+	tub_rinner = cf_curve_radius - c_t/2.;
+	tub_router = cf_curve_radius + c_t/2.;
+	tub_length = si_l + lec_length + rec_length;
+	double las_container_length = tub_length;
+	sta_phi = 0.;
+	sto_phi = si_w/cf_curve_radius;
+	G4VSolid* las_container = new G4Tubs("LAS_container", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+	G4LogicalVolume* las_container_logic = new G4LogicalVolume(las_container, mat_air, "LASContainerLogic");
+	las_container_logic->SetVisAttributes(air_vis);
+
+	
+	// build the LAS
+	tub_rinner = cf_curve_radius - si_t/2.;
+	tub_router = cf_curve_radius + si_t/2.;
+	tub_length = si_l;
+
+	G4Material* mat_si = nist->FindOrBuildMaterial("G4_Si");
+	G4VSolid* las_curve = new G4Tubs("LAS_Curve", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+	
+	tub_rinner = cf_curve_radius - si_t;
+	tub_router = cf_curve_radius + si_t;
+	tub_length = si_l + m_nooverlap;
+	sto_phi = peri_width/cf_curve_radius;
+	G4VSolid* strip_tub = new G4Tubs("strip_tub", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+	
+	// for periphery 
 	G4VisAttributes* insen_vis = new G4VisAttributes(col_si_insensitive);
 	insen_vis->SetForceSolid(1);
 
-	// lec 
-	G4VSolid* lec_box = new G4Box("lec_box", si_w/2., si_t/2., lec_length/2.);
-	G4LogicalVolume* lec_logic = new G4LogicalVolume(lec_box, mat_si, "LECLogic");
-	lec_logic->SetVisAttributes(insen_vis);
+	tub_rinner = cf_curve_radius - si_t/2.;
+	tub_router = cf_curve_radius + si_t/2.;
+	tub_length = si_l;
+	G4VSolid* las_peri = new G4Tubs("LAS_periphery", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+	G4LogicalVolume* las_peri_logic = new G4LogicalVolume(las_peri, mat_si, "LASPeripheryLogic");
+	las_peri_logic->SetVisAttributes(insen_vis);
 
-	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector(0, 0, -(airbox_length/2. - anc_length - las_airspace - lec_length/2.)),
-		lec_logic,
-		"lec_si",
-		airbox_logic,
-		0,
-		0,
-		OverlapCheck()
-	);
-
+	rotm = G4RotationMatrix();
+	double rot_angle = 0.;
+	rotm.rotateZ(rot_angle);
+	G4ThreeVector pos = G4ThreeVector(0., 0., (lec_length-rec_length)/2.);
+	trans = G4Transform3D(rotm, pos);
+	las_curve = new G4SubtractionSolid("LAS_Curve_strip_periphery1", las_curve, strip_tub, trans);
 	
-	G4VSolid* rec_box = new G4Box("rec_box", si_w/2., si_t/2., rec_length/2.);
-	G4LogicalVolume* rec_logic = new G4LogicalVolume(rec_box, mat_si, "RECLogic");
-	rec_logic->SetVisAttributes(insen_vis);
-
 	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector(0, 0, (airbox_length - rec_length)/2.),
-		rec_logic,
-		"rec_si",
-		airbox_logic,
+		trans,
+		las_peri_logic,
+		"LAS_Periphery1",
+		las_container_logic,
 		0,
 		0,
 		OverlapCheck()
 	);
 
-	// ancASIC
-	G4VSolid* anc_box = new G4Box("anc_box", anc_length/2., anc_thickness/2., anc_length/2.);
-	G4LogicalVolume* anc_logic = new G4LogicalVolume(anc_box, mat_si, "AncLogic");
-	anc_logic->SetVisAttributes(insen_vis);
+	rot_angle = (si_w/2. - peri_width)/cf_curve_radius;
+	rotm.rotateZ(rot_angle);
+	trans = G4Transform3D(rotm, pos);
+	las_curve = new G4SubtractionSolid("LAS_Curve_strip_periphery2", las_curve, strip_tub, trans);
 
 	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector(-si_w/4., -(airbox_thickness - kapton_thickness)/2., -(airbox_length/2. - anc_length/2.)),
-		anc_logic,
-		"ancASIC",
-		airbox_logic,
-		0,
-		0,
-		OverlapCheck()
-	);
-
-	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector(si_w/4, -(airbox_thickness - kapton_thickness)/2., -(airbox_length/2. - anc_length/2.)),
-		anc_logic,
-		"ancASIC",
-		airbox_logic,
-		0,
-		1,
-		OverlapCheck()
-	);
-	
-	G4VSolid* periphery_box = new G4Box("periphery_box", peri_width/2., si_t/2., si_l/2. );
-	G4LogicalVolume* periphery_logic = new G4LogicalVolume(periphery_box, mat_si, "Periphery_logic");
-	periphery_logic->SetVisAttributes(insen_vis);
-
-	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector(-(si_w - peri_width)/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-		periphery_logic,
-		"periphery",
-		airbox_logic,
-		0,
-		0,
-		OverlapCheck()
-	);
-
-	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector(-peri_width/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-		periphery_logic,
-		"periphery",
-		airbox_logic,
+		trans,
+		las_peri_logic,
+		"LAS_Periphery2",
+		las_container_logic,
 		0,
 		1,
 		OverlapCheck()
 	);
 
+	rot_angle = peri_width/cf_curve_radius;
+	rotm.rotateZ(rot_angle);
+	trans = G4Transform3D(rotm,pos);
+	las_curve = new G4SubtractionSolid("LAS_Curve_strip_periphery3", las_curve, strip_tub, trans);
+
 	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector(peri_width/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-		periphery_logic,
-		"periphery",
-		airbox_logic,
+		trans,
+		las_peri_logic,
+		"LAS_periphery3",
+		las_container_logic,
 		0,
 		2,
 		OverlapCheck()
 	);
 
+	rot_angle = (si_w/2. - peri_width)/cf_curve_radius;
+	rotm.rotateZ(rot_angle);
+	trans = G4Transform3D(rotm, pos);
+	las_curve = new G4SubtractionSolid("LAS_Curve_strip_periphery4", las_curve, strip_tub, trans);
+
 	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector((si_w - peri_width)/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-		periphery_logic,
-		"periphery",
-		airbox_logic,
+		trans,
+		las_peri_logic,
+		"LAS_periphery4",
+		las_container_logic,
 		0,
 		3,
 		OverlapCheck()
-	);
+	);	
 
-	//kapton
-	G4Material* mat_kapton = nist->FindOrBuildMaterial("G4_KAPTON");
-	G4VSolid* kapton_box = new G4Box("kapton_layer", si_w/2., si_t/2., (las_airspace + anc_length)/2.);
-	G4LogicalVolume* kapton_logic = new G4LogicalVolume(kapton_box, mat_kapton, "KaptonLogic");
-	G4VisAttributes* kapton_vis = new G4VisAttributes(col_kapton);
-	kapton_vis->SetForceSolid(1);
-	kapton_logic->SetVisAttributes(kapton_vis);
+	
 
+	G4LogicalVolume* las_logical = new G4LogicalVolume(las_curve, mat_si, "LASLogial");
+	las_logical->SetVisAttributes(las_vis);
+
+	G4VPhysicalVolume* las_phys = 
 	new G4PVPlacement(
 		nullptr,
-		G4ThreeVector(0, (airbox_thickness - kapton_thickness)/2., -(airbox_length - las_airspace - anc_length)/2.),
-		kapton_logic,
-		"kapton_layer",
-		airbox_logic,
+		pos,
+		las_logical,
+		"LAS_Stave",
+		las_container_logic,
 		0,
 		0,
 		OverlapCheck()
 	);
 
-	// placement of staves
-	if (r_inner + si_t + c_t >= r_outer){
-		std::cout<<"Overlaps will happen between inner and outer layers, please check parameters blew: "<<std::endl;
-		std::cout<<"r_inner: "<< r_inner <<std::endl;
-		std::cout<<"silicon thickness: "<< si_t << std::endl;
-		std::cout<<"Carbon thickness: "<< c_t <<std::endl;
-		gSystem->Exit(1);
-	}
+	m_PhysicalVolumesSet.insert(las_phys);
+
+	tub_length = lec_length;
+	sto_phi = si_w/cf_curve_radius;
+	G4VSolid* lec_solid = new G4Tubs("lec_solid", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+	tub_length = rec_length;
+	G4VSolid* rec_solid = new G4Tubs("rec_solid", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
+	
+	G4LogicalVolume* lec_logic =new G4LogicalVolume(lec_solid, mat_si, "LECLogic");
+	lec_logic->SetVisAttributes(insen_vis);
+	G4LogicalVolume* rec_logic = new G4LogicalVolume(rec_solid, mat_si, "RECLogic");
+	rec_logic->SetVisAttributes(insen_vis);
+
+	pos = G4ThreeVector(0., 0., -las_container_length/2. + lec_length/2.);
+	new G4PVPlacement(
+		nullptr,
+		pos,
+		lec_logic,
+		"LAS_LEC",
+		las_container_logic,
+		0,
+		0,
+		OverlapCheck()
+	);
+
+	pos = G4ThreeVector(0., 0., las_container_length/2. - rec_length/2.);
+	new G4PVPlacement(
+		nullptr,
+		pos,
+		rec_logic,
+		"LAS_REC",
+		las_container_logic,
+		0,
+		0,
+		OverlapCheck()
+	);
 
 
-	for(int i =0; i < nz; i++){ // loop LAS' in z direction
-		if(i == 0){   // place the carbon stave first
-			for(int j = 0; j < nphi; j++){
-				double phi = j*2*M_PI/nphi;
-				G4RotationMatrix rotm = G4RotationMatrix();
-				rotm.rotateZ(M_PI/2. + phi);
-				G4ThreeVector uz = G4ThreeVector(std::cos(phi), std::sin(phi), 0.);
-				G4ThreeVector position = G4ThreeVector(0., 0., 0.);
-				if(j%2 == 0){
-					position = r_inner*uz;
-				}
-				else{
-					position = r_outer*uz;
-				}
-				G4Transform3D transform = G4Transform3D(rotm, position);
+	// kapton 
+	tub_rinner = cf_curve_radius;
+	tub_router = cf_curve_radius + kapton_thickness;
+	double kapton_width = anc_length + m_nooverlap;
+	sta_phi = 0;
+	sto_phi = si_w/cf_curve_radius;
 
+	G4VSolid* kapton_solid = new G4Tubs("kapton_solid", tub_rinner, tub_router, kapton_width/2., sta_phi, sto_phi);
+	G4LogicalVolume* kapton_logic = new G4LogicalVolume(kapton_solid, mat_kapton, "KaptonLogic");
+	kapton_logic->SetVisAttributes(kapton_vis);
+
+
+	// Anc-ASIC 
+	box_x = anc_length;
+	box_y = anc_thickness;
+	box_z = anc_length;
+	G4VSolid* anc_solid = new G4Box("anc_solid", box_x/2., box_y/2., box_z/2.);
+	G4LogicalVolume* anc_logic = new G4LogicalVolume(anc_solid
+	, mat_si, "AncASICLogic");
+	anc_logic->SetVisAttributes(insen_vis);
+
+
+	//place the las container
+	ostringstream oss;
+	G4ThreeVector pos_kapton;
+	G4ThreeVector pos_ancleft;
+	G4ThreeVector pos_ancright;
+
+	G4RotationMatrix rotanc_left;
+	rotanc_left.rotateZ(si_w/(4*cf_curve_radius));
+	G4RotationMatrix rotanc_right;
+	rotanc_right.rotateZ(-si_w/(4*cf_curve_radius));
+	double dt = cf_curve_radius*(1 - cos(si_w/(4*cf_curve_radius)));
+
+	
+	G4Transform3D trans_ancleft;
+	G4Transform3D trans_ancright;
+
+
+	for(int i =0; i<nz; i++){
+		
+		rotm = G4RotationMatrix();
+		rotm.rotateZ(M_PI/2. - si_w/(2*cf_curve_radius));
+		if(i >= nz/2) rotm.rotateY(M_PI);
+		
+		if(i%2 == 0){
+			pos = G4ThreeVector(0., -anc_thickness-kapton_thickness, -stave_length/2. + cf_lec + i/2*(si_l + las_container_length) + las_container_length/2.);
+			if( i < nz/2){
+				pos_kapton = G4ThreeVector(0., -anc_thickness, -stave_length/2. + cf_lec + i/2*(si_l + las_container_length) - las_airspace/2. - kapton_width/2.);
+				// anc asic
+				posx = -si_w/4.;//- (cf_curve_radius + c_t + kapton_thickness + m_nooverlap + m_nooverlap + anc_thickness/2.)*sin(si_w/(2*cf_curve_radius));
+				posy = cf_curve_radius - dt - anc_thickness;//(cf_curve_radius + c_t + kapton_thickness + m_nooverlap + m_nooverlap + anc_thickness/2.)*cos(si_w/(2*cf_curve_radius));
+				posz = -stave_length/2. + cf_lec + i/2*(si_l + las_container_length) - las_airspace/2. - kapton_width/2.;
+				pos_ancleft = G4ThreeVector(posx, posy, posz);
+				trans_ancleft = G4Transform3D(rotanc_left, pos_ancleft);
 				
-//				G4VPhysicalVolume* c_phy = 
-				new G4PVPlacement(
-					transform, // rotation, position
-					stave_logical,  // logical volume
-					"Carbon_stave",
-					logicWorld,
-					0,   // no boolean operation
-					j,   // copy number
-					OverlapCheck()
-					
-					);
+				posx = si_w/4.; //(cf_curve_radius + c_t + kapton_thickness + m_nooverlap + m_nooverlap + anc_thickness/2.)*sin(si_w/(2*cf_curve_radius));
+				pos_ancright = G4ThreeVector(posx, posy, posz);
+				trans_ancright = G4Transform3D(rotanc_right, pos_ancright);
+			}
 
+			else{	
+				pos_kapton = G4ThreeVector(0., c_t + kapton_thickness + m_nooverlap, stave_length/2. - cf_rec - (nz - 1 - i)/2*(si_l + las_container_length) - si_l + las_airspace/2. + kapton_width/2.);
+				// anc asic
+				posx = -si_w/4.; //- (cf_curve_radius + c_t + kapton_thickness + m_nooverlap + m_nooverlap + anc_thickness/2.)*sin(si_w/(2*cf_curve_radius));
+				posy = cf_curve_radius - dt - anc_thickness;//(cf_curve_radius + c_t + kapton_thickness + m_nooverlap + m_nooverlap + anc_thickness/2.)*cos(si_w/(2*cf_curve_radius));
+				posz = stave_length/2. - cf_rec - (nz - 1 - i)/2*(si_l + las_container_length) - si_l + las_airspace/2. + kapton_width/2.;
+				pos_ancleft = G4ThreeVector(posx, posy, posz);
+				trans_ancleft = G4Transform3D(rotanc_left, pos_ancleft);
+				
+				posx = si_w/4.;//(cf_curve_radius + c_t + kapton_thickness + m_nooverlap + m_nooverlap + anc_thickness/2.)*sin(si_w/(2*cf_curve_radius));
+				pos_ancright = G4ThreeVector(posx, posy, posz);
+				trans_ancright = G4Transform3D(rotanc_right, pos_ancright);
 			}
+				
 		}
-		// place the LAS 
-		for(int j =0; j < nphi; j++){
-			double phi = j*2*M_PI/nphi;
-			G4RotationMatrix rotm = G4RotationMatrix();
-			rotm.rotateZ(M_PI/2. + phi);
-			double pz = -c_l/2 + z_align + (0.5+i) * si_l - i * las_ol;
-			double r_eff = 0.;
-			if(i%2 == 0 && j%2 == 0){
-				r_eff = r_inner + c_t/2. + airbox_thickness/2.;
-			} 
-			else if(i%2 == 0 && j%2 == 1){
-				r_eff = r_outer + c_t/2. + airbox_thickness/2.;
+		else{
+			rotm.rotateZ(M_PI);
+			pos = G4ThreeVector(0., cf_curve_radius + cf_stave_container_ymin + anc_thickness + kapton_thickness, -stave_length/2. + cf_lec + (i/2+1)*si_l + i/2*las_container_length + las_container_length/2.);
+			if(i < nz/2){
+				pos_kapton = G4ThreeVector(0., cf_curve_radius + cf_stave_container_ymin + anc_thickness, -stave_length/2. + cf_lec + (i/2 +1)*si_l + i/2*las_container_length -las_airspace/2. - kapton_width/2.);
+				
+				//anc asic
+				posx = -si_w/4.;//-(cf_curve_radius - cf_center_height - 2*c_t - m_nooverlap - m_nooverlap - anc_thickness/2.)*sin(si_w/(2*cf_curve_radius));
+				posy = cf_stave_container_ymin + dt + anc_thickness;// (cf_curve_radius - cf_center_height - 2*c_t - m_nooverlap - m_nooverlap - anc_thickness/2.)*cos(si_w/(2*cf_curve_radius));
+				posz = -stave_length/2. + cf_lec + (i/2 +1)*si_l + i/2*las_container_length -las_airspace/2. - kapton_width/2.;
+				pos_ancleft = G4ThreeVector(posx, posy, posz);
+				trans_ancleft = G4Transform3D(rotanc_right, pos_ancleft);
+
+				posx = si_w/4.; //(cf_curve_radius - cf_center_height - 2*c_t - m_nooverlap - m_nooverlap - anc_thickness/2.)*sin(si_w/(2*cf_curve_radius));
+				pos_ancright = G4ThreeVector(posx, posy, posz);
+				trans_ancright = G4Transform3D(rotanc_left, pos_ancright);
 			}
-			else if(i%2 == 1 && j%2 == 0){
-				r_eff = r_inner - c_t/2. - airbox_thickness/2.;
-			}
+
 			else{
-				r_eff = r_outer - c_t/2. - airbox_thickness/2.;
+				pos_kapton = G4ThreeVector(0., cf_curve_radius + cf_stave_container_ymin + anc_thickness + kapton_thickness, stave_length/2. - cf_rec - (nz - 1 - i)/2*(si_l + las_container_length) + las_airspace/2. + kapton_width/2.);
+
+				//anc asic
+				posx = -si_w/4.; //-(cf_curve_radius - cf_center_height - 2*c_t - m_nooverlap - m_nooverlap - anc_thickness/2.)*sin(si_w/(2*cf_curve_radius));
+				posy = cf_stave_container_ymin + dt + anc_thickness; //(cf_curve_radius - cf_center_height - 2*c_t - m_nooverlap - m_nooverlap - anc_thickness/2.)*cos(si_w/(2*cf_curve_radius));
+				posz = stave_length/2. - cf_rec - (nz - 1 - i)/2*(si_l + las_container_length) + las_airspace/2. + kapton_width/2.;
+				pos_ancleft = G4ThreeVector(posx, posy, posz);
+				trans_ancleft = G4Transform3D(rotanc_right, pos_ancleft);
+
+				posx = si_w/4.; //(cf_curve_radius - cf_center_height - 2*c_t - m_nooverlap - m_nooverlap - anc_thickness/2.)*sin(si_w/(2*cf_curve_radius));
+				pos_ancright = G4ThreeVector(posx, posy, posz);
+				trans_ancright = G4Transform3D(rotanc_left, pos_ancright);
 			}
-			double px = r_eff * std::cos(phi);
-			double py = r_eff * std::sin(phi);
-
-			G4ThreeVector position = G4ThreeVector(px, py, pz);
-			G4Transform3D transform = G4Transform3D(rotm, position);
-
-			G4VPhysicalVolume* las_sensor_phys = 
-			new G4PVPlacement(
-						transform,
-						las_sensor_logic, //airbox_logic,
-						"LAS_stave",
-						logicWorld,
-						0,
-						i*nphi +j,
-						OverlapCheck()
-					);
-
-			m_PhysicalVolumesSet.insert(las_sensor_phys);
-
 		}
+		
+		trans = G4Transform3D(rotm, pos);
+		oss.str("");
+		if(i%2 == 0) oss<<"LAS_TOP"<<i<<endl;
+		else oss<<"LAS_BOT"<<i<<endl;
+		new G4PVPlacement(
+			trans,
+			las_container_logic,
+			oss.str().c_str(),
+			cf_stave_container_logic,
+			0,
+			i,
+			OverlapCheck()
+		);
+
+		//placement of the kapton foil
+		if(i%2 == 0) oss<<"kapton_TOP"<<i<<endl;
+		else oss<<"kapton_BOT"<<i<<endl;
+		trans = G4Transform3D(rotm, pos_kapton);
+		new G4PVPlacement(
+			trans,
+			kapton_logic,
+			oss.str().c_str(),
+			cf_stave_container_logic,
+			0,
+			i,
+			0 //OverlapCheck()
+		);
+		
+		// left anc-asic
+		new G4PVPlacement(
+			trans_ancleft,
+			anc_logic,
+			"ancASIC_left",
+			cf_stave_container_logic,
+			0,
+			i,
+			0 //OverlapCheck()
+		);
+
+		// right one
+		new G4PVPlacement(
+			trans_ancright,
+			anc_logic,
+			"ancASIC_right",
+			cf_stave_container_logic,
+			0,
+			i,
+			0 //OverlapCheck()
+		);
+	}
+
+	// kapton foil on the stave edge
+	box_x = kapton_thickness;
+	box_y = cf_edge_height - 2*m_nooverlap;
+	box_z = stave_length;
+
+	G4VSolid* edge_kapton_solid = new G4Box("edge_kapton", box_x/2., box_y/2., box_z/2.);
+	G4LogicalVolume* edge_kapton_logic = new G4LogicalVolume(edge_kapton_solid, mat_kapton, "EdgeKaptonLogic");
+	edge_kapton_logic->SetVisAttributes(kapton_vis);
+	//placement
+	posx = strip_x - intersection_chord_length/2. - box_x;
+	posy = cf_curve_radius - anc_thickness - kapton_thickness - cf_center_height/2.;
+	posz = 0.;
+	new G4PVPlacement(
+		nullptr,
+		G4ThreeVector(posx, posy, posz),
+		edge_kapton_logic,
+		"edge_kapton_left",
+		cf_stave_container_logic,
+		0,
+		0,
+		OverlapCheck()
+	);
+	posx = intersection_chord_length/2. - strip_x + box_x;
+	new G4PVPlacement(
+		nullptr,
+		G4ThreeVector(posx, posy, posz),
+		edge_kapton_logic,
+		"edge_kapton_right",
+		cf_stave_container_logic,
+		0,
+		0,
+		OverlapCheck()
+	);
+
+	// place the curved stave
+	rotm = G4RotationMatrix();
+	for(int i = 0; i < nphi; i++){
+
+		double dphi = 2*M_PI/nphi;
+		double cur_phi = M_PI/2. + i*2*M_PI/nphi;
+		double r_eff = 0;
+		if(i%2 == 0) r_eff = r_inner - cf_curve_radius;
+		else r_eff = r_outer - cf_curve_radius;
+
+		posx = r_eff*cos(cur_phi);
+		posy = r_eff*sin(cur_phi);
+		posz = 0.;
+		
+		rotm.rotateZ(dphi);
+		pos = G4ThreeVector(posx, posy, posz);
+		trans = G4Transform3D(rotm, pos);
+
+		new G4PVPlacement(
+			trans,
+			cf_stave_container_logic,
+			"CFStaveContainer",
+			logicWorld,
+			0,
+			i,
+			OverlapCheck()
+		);
 
 	}
+
+	// new G4PVPlacement(
+	// 	nullptr,
+	// 	G4ThreeVector(0., 0., 0.),
+	// 	cf_stave_container_logic,
+	// 	"CFStaveContainer",
+	// 	logicWorld,
+	// 	0,
+	// 	0,
+	// 	OverlapCheck()
+	// );
 
 	return;
 

@@ -114,6 +114,20 @@ void ePIC_SVT_OB_Subsystem::SetDefaultParameters(){
 	set_default_double_param("carbon_thickness", 0.);
 	set_default_double_param("carbon_length", 0.);
 	set_default_double_param("carbon_width", 0.);
+	set_default_double_param("cf_leftendcap", 0.);
+	set_default_double_param("cf_rightendcap", 0.);
+	set_default_double_param("cf_margin", 0.);
+	set_default_double_param("cf_curve_radius", 0.);
+	set_default_double_param("cf_center_height", 0.);
+	set_default_double_param("cf_edge_height", 0.);
+
+	set_default_double_param("oring_radius", 0.);
+	set_default_double_param("oring_spacing", 0.);
+
+	set_default_double_param("cf_csupport_width", 0.);
+
+	set_default_double_param("k9_center_height", 0.);
+
 	set_default_double_param("si_thickness", 0.);
 	set_default_double_param("si_length", 0.);
 	set_default_double_param("si_width", 0.);
