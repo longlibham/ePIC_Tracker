@@ -133,7 +133,6 @@ void ePIC_SVT_OB_Subsystem::SetDefaultParameters(){
 	set_default_double_param("si_width", 0.);
 	set_default_int_param("n_silicon_z", 0);
 	set_default_int_param("n_stave_phi", 0);
-	set_default_double_param("las_overlap", 0.);
 	set_default_double_param("lec_length", 0.);
 	set_default_double_param("rec_length", 0.);
 	set_default_double_param("anc_length", 0.);

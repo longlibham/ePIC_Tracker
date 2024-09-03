@@ -135,10 +135,11 @@ double ePIC_OuterMPGD(PHG4Reco* g4Reco, const int nlayers = 1, double radius = 0
 		
 	}
 
-	// update the BlackHole geometry 
+	// update the BlackHole geometry
+	double z_nooverlap = 1.; 
 	BlackHoleGeometry::max_radius = r_outermpgd + 5.;  // redundancy for black hole 5. cm
-	BlackHoleGeometry::min_z = zmin ;
-	BlackHoleGeometry::max_z = zmax ;
+	BlackHoleGeometry::min_z = zmin - zmax - z_nooverlap;
+	BlackHoleGeometry::max_z = zmax -zmin + z_nooverlap;
 	BlackHoleGeometry::gap = no_overlapp;
 
 	return r_outermpgd + 2.5;

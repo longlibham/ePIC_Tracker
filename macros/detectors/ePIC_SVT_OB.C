@@ -41,28 +41,35 @@ R__LOAD_LIBRARY(libePIC_SVT_OB_Detector.so)
 using namespace std;
 
 namespace ePIC_SVTOB{
-	double carbon_x0 = 0.2;//0.5*0.03;
-   	double carbon_length[2] = {54.31, 83.75};
-	double carbon_width = 3.92;
-	double si_thickness = 0.05/100.*9.37; //0.005;
-	double si_length[2] = {15.0529, 12.8880};
-	double si_width = 3.9128;
+	double r_inner[2] = {27.0, 41.7};
+	double r_outer[2] = {28.2, 42.9};
 
+	double carbon_thickness = 0.2/100*26.356;
+	double carbon_length[2] = {53.2, 89.04};
+	double carbon_width = 3.92;
+	double cf_leftendcap = 1.2;
+	double cf_rightendcap = 1.2;
+	double cf_margin = 0.1;
+	double cf_curve_radius = 9.0115;
+	double cf_center_height = 0.85;
+	double cf_edge_height = 0.351;
+	double oring_radius = 0.25;
+	double oring_spacing = 0.3;
+	double cf_csupport_width = 0.5;
+	double k9_center_height = 0.5;
+	double si_thickness = 0.05/100*9.37;
+	double si_length[2] = {13.0, 10.83};
+	double si_width = 3.9128;
+	double n_silicon_z[2] = {4, 8};
+	double n_stave_phi[2] = {46, 70};
 	double lec_length = 0.45;
 	double rec_length = 0.15;
 	double anc_length = 1.0;
-	double anc_thickness = 0.03;
-	double las_airspace = 0.45;
-	double periphery_width = 0.0525;
-	double kapton_thickness = 0.005;
+	double anc_thickness = 300./10000.;
+	double las_airspace = 0.6;
+	double peri_width = 0.0525;
+	double kapton_thickness = 100./10000.;
 
-	double r_inner[2] = {27.1, 41.8};
-	double r_outer[2] = {27.7, 42.4};
-
-	int n_silicon_z[2] = {4, 8};
-	int n_stave_phi[2] = {46, 70};
-	double las_overlap[2] = {2.55, 2.98};
-	const int ob_layers = 2;
 
 }
 
@@ -119,30 +126,35 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 		
 		svt_ob = new ePIC_SVT_OB_Subsystem("SVTXOB", ilayer);
 		
-		// set the parameters
+		// set the parameter
 		svt_ob->set_double_param("r_inner", ePIC_SVTOB::r_inner[ilayer]);
 		svt_ob->set_double_param("r_outer", ePIC_SVTOB::r_outer[ilayer]);
-		// carbon support 
-		svt_ob->set_double_param("carbon_thickness", ePIC_SVTOB::carbon_x0/100*26.356);
+		svt_ob->set_double_param("carbon_thickness", ePIC_SVTOB::carbon_thickness);
 		svt_ob->set_double_param("carbon_length", ePIC_SVTOB::carbon_length[ilayer]);
 		svt_ob->set_double_param("carbon_width", ePIC_SVTOB::carbon_width);
-		// LAS geo 
+		svt_ob->set_double_param("cf_leftendcap", ePIC_SVTOB::cf_leftendcap);
+		svt_ob->set_double_param("cf_rightendcap", ePIC_SVTOB::cf_rightendcap);
+		svt_ob->set_double_param("cf_margin", ePIC_SVTOB::cf_margin);
+		svt_ob->set_double_param("cf_curve_radius", ePIC_SVTOB::cf_curve_radius);
+		svt_ob->set_double_param("cf_center_height", ePIC_SVTOB::cf_center_height);
+		svt_ob->set_double_param("cf_edge_height", ePIC_SVTOB::cf_edge_height);
+		svt_ob->set_double_param("oring_radius", ePIC_SVTOB::oring_radius);
+		svt_ob->set_double_param("oring_spacing", ePIC_SVTOB::oring_spacing);
+		svt_ob->set_double_param("cf_csupport_width", ePIC_SVTOB::cf_csupport_width);
+		svt_ob->set_double_param("k9_center_height", ePIC_SVTOB::k9_center_height);
 		svt_ob->set_double_param("si_thickness", ePIC_SVTOB::si_thickness);
-		svt_ob->set_double_param("si_length", ePIC_SVTOB::si_length[ilayer]+ePIC_SVTOB::lec_length+ePIC_SVTOB::rec_length);
+		svt_ob->set_double_param("si_length", ePIC_SVTOB::si_length[ilayer]);
 		svt_ob->set_double_param("si_width", ePIC_SVTOB::si_width);
 		svt_ob->set_int_param("n_silicon_z", ePIC_SVTOB::n_silicon_z[ilayer]);
 		svt_ob->set_int_param("n_stave_phi", ePIC_SVTOB::n_stave_phi[ilayer]);
-
-		// overlaps of LAS
-		
-		svt_ob->set_double_param("las_overlap", ePIC_SVTOB::las_overlap[ilayer]);
 		svt_ob->set_double_param("lec_length", ePIC_SVTOB::lec_length);
 		svt_ob->set_double_param("rec_length", ePIC_SVTOB::rec_length);
 		svt_ob->set_double_param("anc_length", ePIC_SVTOB::anc_length);
 		svt_ob->set_double_param("anc_thickness", ePIC_SVTOB::anc_thickness);
 		svt_ob->set_double_param("las_airspace", ePIC_SVTOB::las_airspace);
-		svt_ob->set_double_param("periphery_width", ePIC_SVTOB::periphery_width);
+		svt_ob->set_double_param("periphery_width", ePIC_SVTOB::peri_width);
 		svt_ob->set_double_param("kapton_thickness", ePIC_SVTOB::kapton_thickness);
+
 		
 		svt_ob->SetActive();
 //		svt_ob->SuperDetector("SVTOB");

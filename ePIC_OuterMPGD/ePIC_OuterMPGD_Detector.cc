@@ -236,7 +236,7 @@ void ePIC_OuterMPGD_Detector::ConstructMe(G4LogicalVolume* logicWorld){
             G4RotationMatrix rotm = G4RotationMatrix();
             rotm.rotateZ(M_PI/2. + phi);
 
-            double posz = offset_z + (2*nz-1)*(no_overlap_z/2. + z_length/2.);
+            double posz = (2*nz-1)*(no_overlap_z/2. + z_length/2.) + offset_z;
             G4ThreeVector position = G4ThreeVector(
                 radius*std::cos(phi), 
                 radius*std::sin(phi), 

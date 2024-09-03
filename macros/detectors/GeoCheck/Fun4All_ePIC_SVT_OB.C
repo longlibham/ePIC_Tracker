@@ -111,27 +111,34 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	// build my SVT OB layers
 	//
 	// L3/L4 OB
-	double r_inner[2] = {27.1, 41.8};
-	double r_outer[2] = {27.7, 42.4};
-	double carbon_thickness = 0.5;//0.5*0.03;
-   	double carbon_length[2] = {54.31, 83.75};
-	double carbon_width = 3.92;
-	//double si_thickness = 0.005;
-	double si_thickness = 0.05/100.*9.37; //0.005;
-	double si_length[2] = {15.0529, 12.8880};
-	double si_width = 3.9128;
+	double r_inner[2] = {27., 41.7};
+	double r_outer[2] = {28.2, 42.9};
 
+	double carbon_thickness = 0.2/100*26.356;
+	double carbon_length[2] = {53.2, 89.04};
+	double carbon_width = 3.92;
+	double cf_leftendcap = 1.2;
+	double cf_rightendcap = 1.2;
+	double cf_margin = 0.1;
+	double cf_curve_radius = 9.0115;
+	double cf_center_height = 0.85;
+	double cf_edge_height = 0.351;
+	double oring_radius = 0.25;
+	double oring_spacing = 0.3;
+	double cf_csupport_width = 0.5;
+	double k9_center_height = 0.5;
+	double si_thickness = 0.05/100*9.37;
+	double si_length[2] = {13.0, 10.83};
+	double si_width = 3.9128;
+	double n_silicon_z[2] = {4, 8};
+	double n_stave_phi[2] = {46, 70};
 	double lec_length = 0.45;
 	double rec_length = 0.15;
 	double anc_length = 1.0;
-	double anc_thickness = 0.03;
-	double las_airspace = 0.45;
+	double anc_thickness = 300./10000.;
+	double las_airspace = 0.6;
 	double peri_width = 0.0525;
-	double kapton_thickness = 0.005;
-
-	int n_silicon_z[2] = {4, 8};
-	int n_stave_phi[2] = {46, 70};
-	double las_overlap[2] = {2.55, 2.98};
+	double kapton_thickness = 100./10000.;
 	const int ob_layers = 2;
 	
 	ePIC_SVT_OB_Subsystem* svt_ob;
@@ -142,14 +149,24 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 		// set the parameters
 		svt_ob->set_double_param("r_inner", r_inner[i]);
 		svt_ob->set_double_param("r_outer", r_outer[i]);
-		// carbon support 
 		svt_ob->set_double_param("carbon_thickness", carbon_thickness);
 		svt_ob->set_double_param("carbon_length", carbon_length[i]);
 		svt_ob->set_double_param("carbon_width", carbon_width);
-		// LAS geo 
+		svt_ob->set_double_param("cf_leftendcap", cf_leftendcap);
+		svt_ob->set_double_param("cf_rightendcap", cf_rightendcap);
+		svt_ob->set_double_param("cf_margin", cf_margin);
+		svt_ob->set_double_param("cf_curve_radius", cf_curve_radius);
+		svt_ob->set_double_param("cf_center_height", cf_center_height);
+		svt_ob->set_double_param("cf_edge_height", cf_edge_height);
+		svt_ob->set_double_param("oring_radius", oring_radius);
+		svt_ob->set_double_param("oring_spacing", oring_spacing);
+		svt_ob->set_double_param("cf_csupport_width", cf_csupport_width);
+		svt_ob->set_double_param("k9_center_height", k9_center_height);
 		svt_ob->set_double_param("si_thickness", si_thickness);
 		svt_ob->set_double_param("si_length", si_length[i]);
 		svt_ob->set_double_param("si_width", si_width);
+		svt_ob->set_int_param("n_silicon_z", n_silicon_z[i]);
+		svt_ob->set_int_param("n_stave_phi", n_stave_phi[i]);
 		svt_ob->set_double_param("lec_length", lec_length);
 		svt_ob->set_double_param("rec_length", rec_length);
 		svt_ob->set_double_param("anc_length", anc_length);
@@ -158,13 +175,6 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 		svt_ob->set_double_param("periphery_width", peri_width);
 		svt_ob->set_double_param("kapton_thickness", kapton_thickness);
 
-
-		svt_ob->set_int_param("n_silicon_z", n_silicon_z[i]);
-		svt_ob->set_int_param("n_stave_phi", n_stave_phi[i]);
-
-		// overlaps of LAS
-		
-		svt_ob->set_double_param("las_overlap", las_overlap[i]);
 		
 		svt_ob->SetActive();
 		svt_ob->OverlapCheck(1);
