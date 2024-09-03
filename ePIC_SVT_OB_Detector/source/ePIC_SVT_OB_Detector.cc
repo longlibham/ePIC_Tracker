@@ -356,7 +356,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 			G4VPhysicalVolume* las_sensor_phys = 
 			new G4PVPlacement(
 						transform,
-						las_sensor_logic, //airbox_logic,
+						airbox_logic,
 						"LAS_stave",
 						logicWorld,
 						0,

@@ -111,14 +111,14 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	// build my SVT OB layers
 	//
 	// L3/L4 OB
-	double r_inner[2] = {27.1, 41.8};
-	double r_outer[2] = {27.7, 42.4};
-	double carbon_thickness = 0.5;//0.5*0.03;
+	double r_inner[2] = {27., 41.7};
+	double r_outer[2] = {27.8, 42.9};
+	double carbon_thickness = 0.2/100*26.356;//0.5*0.03;
    	double carbon_length[2] = {54.31, 83.75};
 	double carbon_width = 3.92;
 	//double si_thickness = 0.005;
 	double si_thickness = 0.05/100.*9.37; //0.005;
-	double si_length[2] = {15.0529, 12.8880};
+	double si_length[2] = {13., 10.83};
 	double si_width = 3.9128;
 
 	double lec_length = 0.45;
@@ -127,11 +127,14 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	double anc_thickness = 0.03;
 	double las_airspace = 0.45;
 	double peri_width = 0.0525;
-	double kapton_thickness = 0.005;
+	double kapton_thickness = 0.01;
 
 	int n_silicon_z[2] = {4, 8};
 	int n_stave_phi[2] = {46, 70};
-	double las_overlap[2] = {2.55, 2.98};
+	double las_overlap[2] = {
+		((si_length[0]*n_silicon_z[0] + lec_length + rec_length) - carbon_length[0]) / (n_silicon_z[0] - 1),
+		((si_length[1]*n_silicon_z[1] + lec_length + rec_length) - carbon_length[1]) / (n_silicon_z[1] - 1)
+	};
 	const int ob_layers = 2;
 	
 	ePIC_SVT_OB_Subsystem* svt_ob;

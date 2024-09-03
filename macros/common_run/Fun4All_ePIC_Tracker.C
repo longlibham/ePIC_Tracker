@@ -64,25 +64,6 @@ int Fun4All_ePIC_Tracker(
 	Fun4AllServer* se = Fun4AllServer::instance();
 	se->Verbosity(0);
 	recoConsts* rc = recoConsts::instance();
-	// if you want to fix the random seed to reproduce results
-	// set this flag
-	// nail th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is down so I know what the first event looks like...
-	// 	rc->Set_IntFlag("RANDOMSEED", 12345);
-	
-
-	//
-	// particle generator
-	//
-	
-	//the PHG4ParticleGenerator makes cones using phi and eta 
-//	PHG4ParticleGenerator* gen = new PHG4ParticleGenerator("PGENERATOR");
-//	gen->set_name("pi-");
-//	gen->set_vtx(0, 0, 0);
-//	gen->set_eta_range(emin, emax);
-//	gen->set_mom_range(pmin, pmax);
-	//gen->set_z_range(0, 0);
-//	gen->set_phi_range(0, M_PI/2.);
-//	se->registerSubsystem(gen);
 
 	// particle generator according to Fun4All_particle_generator.C    --Long LI 2024-05-14
 	if (use_pt)
@@ -166,10 +147,10 @@ int Fun4All_ePIC_Tracker(
     InputManagers();
     //
 
-    if(!outfile.empty() && Enable::DSTOUT){
-        Fun4AllOutputManager* out = new Fun4AllDstOutputManager("DSTOUT", outfile);
-		se->registerOutputManager(out);
-    }
+    // if(!outfile.empty() && Enable::DSTOUT){
+    //     Fun4AllOutputManager* out = new Fun4AllDstOutputManager("DSTOUT", outfile);
+	// 	se->registerOutputManager(out);
+    // }
 
     //
     // Event processing

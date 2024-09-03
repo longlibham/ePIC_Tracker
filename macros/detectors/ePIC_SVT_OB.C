@@ -130,7 +130,7 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 		svt_ob->set_double_param("carbon_width", ePIC_SVTOB::carbon_width);
 		// LAS geo 
 		svt_ob->set_double_param("si_thickness", ePIC_SVTOB::si_thickness);
-		svt_ob->set_double_param("si_length", ePIC_SVTOB::si_length[ilayer]+ePIC_SVTOB::lec_length+ePIC_SVTOB::rec_length);
+		svt_ob->set_double_param("si_length", ePIC_SVTOB::si_length[ilayer]);
 		svt_ob->set_double_param("si_width", ePIC_SVTOB::si_width);
 		svt_ob->set_int_param("n_silicon_z", ePIC_SVTOB::n_silicon_z[ilayer]);
 		svt_ob->set_int_param("n_stave_phi", ePIC_SVTOB::n_stave_phi[ilayer]);
