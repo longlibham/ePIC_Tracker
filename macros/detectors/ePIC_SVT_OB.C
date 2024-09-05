@@ -53,7 +53,7 @@ namespace ePIC_SVTOB{
 	double anc_length = 1.0;
 	double anc_thickness = 0.03;
 	double las_airspace = 0.45;
-	double periphery_width = 0.0525; //0.;
+	double periphery_width =0.; // 0.0525; //0.;
 	double kapton_thickness = 0.005;
 
 	double r_inner[2] = {27.1, 41.8};
@@ -129,7 +129,7 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 		svt_ob->set_double_param("si_thickness", ePIC_SVTOB::si_thickness);
 		
 		double las_length = 0;
-		if(ePIC_SVT_OB::peri_width == 0.) las_length = ePIC_SVTOB::si_length[ilayer] + ePIC_SVTOB::lec_length + ePIC_SVTOB::rec_length;
+		if(ePIC_SVTOB::periphery_width == 0.) las_length = ePIC_SVTOB::si_length[ilayer] + ePIC_SVTOB::lec_length + ePIC_SVTOB::rec_length;
 		else las_length = ePIC_SVTOB::si_length[ilayer];
 		svt_ob->set_double_param("si_length", las_length);
 		svt_ob->set_double_param("si_width", ePIC_SVTOB::si_width);
