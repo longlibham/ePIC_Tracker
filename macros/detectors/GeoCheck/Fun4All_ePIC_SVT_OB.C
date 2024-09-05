@@ -126,7 +126,7 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	double anc_length = 1.0;
 	double anc_thickness = 0.03;
 	double las_airspace = 0.45;
-	double peri_width = 0.0525;
+	double peri_width = 0.0525; // 0;
 	double kapton_thickness = 0.01;
 
 	int n_silicon_z[2] = {4, 8};
@@ -148,7 +148,11 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 		svt_ob->set_double_param("carbon_width", carbon_width);
 		// LAS geo 
 		svt_ob->set_double_param("si_thickness", si_thickness);
-		svt_ob->set_double_param("si_length", si_length[i]);
+		
+		double las_length = 0.;
+		if(peri_width == 0.) las_length = si_length[i] + lec_length + rec_length;
+		else las_length = si_length[i];
+		svt_ob->set_double_param("si_length", las_length);
 		svt_ob->set_double_param("si_width", si_width);
 		svt_ob->set_double_param("lec_length", lec_length);
 		svt_ob->set_double_param("rec_length", rec_length);

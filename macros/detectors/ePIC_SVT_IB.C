@@ -46,7 +46,7 @@ namespace SVTIB{
     double length = 27.;
     double lec_length = 0.45;
     double rec_length = 0.15;
-    double peri_width = 0.0525;
+    double peri_width = 0.0525; //0;
     double tile_width = 0.9782;
 }
 namespace Enable{
@@ -96,7 +96,9 @@ double ePIC_SVT_IB(PHG4Reco* g4Reco, const int nlayers = 3, double radius = 0){
 		svt_ib = new ePIC_SVTIB_Subsystem("SVTXIB", ilayer);
 		svt_ib->set_double_param("radius", SVTIB::si_radius[ilayer]);
 		svt_ib->set_double_param("si_thickness", SVTIB::si_mat/100.*9.37);
-		svt_ib->set_double_param("length", SVTIB::length);  // for no dead area
+		if(SVTIB::peri_width == 0.) double las_length = SVTIB::si_length + SVTIB::lec_length + SVTIB::rec_length;
+		else double las_length = SVTIB::si_length; 
+		svt_ib->set_double_param("length", las_length);  // for no dead area
 		svt_ib->set_double_param("lec_length", SVTIB::lec_length);
 		svt_ib->set_double_param("rec_length", SVTIB::rec_length);
 		svt_ib->set_double_param("periphery_width", SVTIB::peri_width);

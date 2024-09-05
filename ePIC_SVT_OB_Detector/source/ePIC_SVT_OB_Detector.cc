@@ -125,6 +125,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	G4VSolid* las_box = new G4Box("LAS_box", si_w/2.0, si_t/2.0, si_l/2.0);
 	G4VSolid* sub_box = new G4Box("sub_box", (peri_width + m_nooverlap*cm)/2., 10., (si_l + m_nooverlap*cm)/2. );
 
+	
 	G4VSolid* sen_box = new G4SubtractionSolid("LAS_sub0", las_box, sub_box, 0,  
 	G4ThreeVector(-(si_w - peri_width)/2., 0., 0.));
 	sen_box = new G4SubtractionSolid("LAS_sub1", sen_box, sub_box, 0,
@@ -134,7 +135,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	sen_box = new G4SubtractionSolid("LAS_sensitive", sen_box, sub_box, 0, 
 	G4ThreeVector((si_w - peri_width)/2., 0., 0.));
 
-	G4LogicalVolume* las_logical = new G4LogicalVolume(sen_box, mat_si, "LASLogial");
+	G4LogicalVolume* las_logical = new G4LogicalVolume(peri_width > 0 ? sen_box : las_box, mat_si, "LASLogial");
 	G4VisAttributes* las_vis = new G4VisAttributes(G4Color(G4Colour::Yellow()));
 	las_vis->SetForceSolid(true);
 	las_logical->SetVisAttributes(las_vis);
@@ -158,7 +159,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 
 	//Endcaps
 	// lec
-	if(lec_length > 0){ 
+	if(peri_width > 0){ 
 		G4VSolid* lec_box = new G4Box("lec_box", si_w/2., si_t/2., lec_length/2.);
 		G4LogicalVolume* lec_logic = new G4LogicalVolume(lec_box, mat_si, "LECLogic");
 		lec_logic->SetVisAttributes(insen_vis);
@@ -176,7 +177,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	}
 	
 	//rec
-	if(rec_length > 0){
+	if(peri_width > 0){
 		G4VSolid* rec_box = new G4Box("rec_box", si_w/2., si_t/2., rec_length/2.);
 		G4LogicalVolume* rec_logic = new G4LogicalVolume(rec_box, mat_si, "RECLogic");
 		rec_logic->SetVisAttributes(insen_vis);
