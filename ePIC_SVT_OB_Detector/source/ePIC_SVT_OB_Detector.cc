@@ -82,10 +82,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	int  nphi = m_Params->get_int_param("n_stave_phi");
 	
 	// overlaps of LAS
-	double las_ol = m_Params->get_double_param("las_overlap") * cm;
-
-	double las_tot = si_l*nz - las_ol*(nz-1);
-	double z_align = (c_l - las_tot)/2.;
+	double las_overlap = (nz*(si_l + lec_length + rec_length + las_airspace + anc_length) - c_l)/(nz - 1);
 
 	if(!std::isfinite(r_inner) || !std::isfinite(r_outer) || !std::isfinite(c_t)||
 			!std::isfinite(c_l) || !std::isfinite(c_w) || !std::isfinite(si_t) || 
@@ -142,9 +139,6 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	las_vis->SetForceSolid(true);
 	las_logical->SetVisAttributes(las_vis);
 
-	G4LogicalVolume* las_sensor_logic = new G4LogicalVolume(las_box, mat_si, "LASensorLogic");
-	las_sensor_logic->SetVisAttributes(las_vis);
-
 	G4VPhysicalVolume* las_phys = 
 	new G4PVPlacement(
 		nullptr,
@@ -161,37 +155,94 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	G4VisAttributes* insen_vis = new G4VisAttributes(col_si_insensitive);
 	insen_vis->SetForceSolid(1);
 
-	// lec 
-	G4VSolid* lec_box = new G4Box("lec_box", si_w/2., si_t/2., lec_length/2.);
-	G4LogicalVolume* lec_logic = new G4LogicalVolume(lec_box, mat_si, "LECLogic");
-	lec_logic->SetVisAttributes(insen_vis);
 
-	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector(0, 0, -(airbox_length/2. - anc_length - las_airspace - lec_length/2.)),
-		lec_logic,
-		"lec_si",
-		airbox_logic,
-		0,
-		0,
-		OverlapCheck()
-	);
+	//Endcaps
+	// lec
+	if(lec_length > 0){ 
+		G4VSolid* lec_box = new G4Box("lec_box", si_w/2., si_t/2., lec_length/2.);
+		G4LogicalVolume* lec_logic = new G4LogicalVolume(lec_box, mat_si, "LECLogic");
+		lec_logic->SetVisAttributes(insen_vis);
 
+		new G4PVPlacement(
+			nullptr,
+			G4ThreeVector(0, 0, -(airbox_length/2. - anc_length - las_airspace - lec_length/2.)),
+			lec_logic,
+			"lec_si",
+			airbox_logic,
+			0,
+			0,
+			OverlapCheck()
+		);
+	}
 	
-	G4VSolid* rec_box = new G4Box("rec_box", si_w/2., si_t/2., rec_length/2.);
-	G4LogicalVolume* rec_logic = new G4LogicalVolume(rec_box, mat_si, "RECLogic");
-	rec_logic->SetVisAttributes(insen_vis);
+	//rec
+	if(rec_length > 0){
+		G4VSolid* rec_box = new G4Box("rec_box", si_w/2., si_t/2., rec_length/2.);
+		G4LogicalVolume* rec_logic = new G4LogicalVolume(rec_box, mat_si, "RECLogic");
+		rec_logic->SetVisAttributes(insen_vis);
 
-	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector(0, 0, (airbox_length - rec_length)/2.),
-		rec_logic,
-		"rec_si",
-		airbox_logic,
-		0,
-		0,
-		OverlapCheck()
-	);
+		new G4PVPlacement(
+			nullptr,
+			G4ThreeVector(0, 0, (airbox_length - rec_length)/2.),
+			rec_logic,
+			"rec_si",
+			airbox_logic,
+			0,
+			0,
+			OverlapCheck()
+		);
+	}
+
+	// periphery
+	if( peri_width > 0){
+		G4VSolid* periphery_box = new G4Box("periphery_box", peri_width/2., si_t/2., si_l/2. );
+		G4LogicalVolume* periphery_logic = new G4LogicalVolume(periphery_box, mat_si, "Periphery_logic");
+		periphery_logic->SetVisAttributes(insen_vis);
+
+		new G4PVPlacement(
+			nullptr,
+			G4ThreeVector(-(si_w - peri_width)/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
+			periphery_logic,
+			"periphery",
+			airbox_logic,
+			0,
+			0,
+			OverlapCheck()
+		);
+
+		new G4PVPlacement(
+			nullptr,
+			G4ThreeVector(-peri_width/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
+			periphery_logic,
+			"periphery",
+			airbox_logic,
+			0,
+			1,
+			OverlapCheck()
+		);
+
+		new G4PVPlacement(
+			nullptr,
+			G4ThreeVector(peri_width/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
+			periphery_logic,
+			"periphery",
+			airbox_logic,
+			0,
+			2,
+			OverlapCheck()
+		);
+
+		new G4PVPlacement(
+			nullptr,
+			G4ThreeVector((si_w - peri_width)/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
+			periphery_logic,
+			"periphery",
+			airbox_logic,
+			0,
+			3,
+			OverlapCheck()
+		);
+	}
 
 	// ancASIC
 	G4VSolid* anc_box = new G4Box("anc_box", anc_length/2., anc_thickness/2., anc_length/2.);
@@ -217,54 +268,6 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 		airbox_logic,
 		0,
 		1,
-		OverlapCheck()
-	);
-	
-	G4VSolid* periphery_box = new G4Box("periphery_box", peri_width/2., si_t/2., si_l/2. );
-	G4LogicalVolume* periphery_logic = new G4LogicalVolume(periphery_box, mat_si, "Periphery_logic");
-	periphery_logic->SetVisAttributes(insen_vis);
-
-	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector(-(si_w - peri_width)/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-		periphery_logic,
-		"periphery",
-		airbox_logic,
-		0,
-		0,
-		OverlapCheck()
-	);
-
-	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector(-peri_width/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-		periphery_logic,
-		"periphery",
-		airbox_logic,
-		0,
-		1,
-		OverlapCheck()
-	);
-
-	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector(peri_width/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-		periphery_logic,
-		"periphery",
-		airbox_logic,
-		0,
-		2,
-		OverlapCheck()
-	);
-
-	new G4PVPlacement(
-		nullptr,
-		G4ThreeVector((si_w - peri_width)/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-		periphery_logic,
-		"periphery",
-		airbox_logic,
-		0,
-		3,
 		OverlapCheck()
 	);
 
@@ -333,7 +336,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 			double phi = j*2*M_PI/nphi;
 			G4RotationMatrix rotm = G4RotationMatrix();
 			rotm.rotateZ(M_PI/2. + phi);
-			double pz = -c_l/2 + z_align + (0.5+i) * si_l - i * las_ol;
+			double pz = -c_l/2 + (2*i+1)*airbox_length/2. - i*las_overlap;
 			double r_eff = 0.;
 			if(i%2 == 0 && j%2 == 0){
 				r_eff = r_inner + c_t/2. + airbox_thickness/2.;
@@ -353,7 +356,6 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 			G4ThreeVector position = G4ThreeVector(px, py, pz);
 			G4Transform3D transform = G4Transform3D(rotm, position);
 
-			G4VPhysicalVolume* las_sensor_phys = 
 			new G4PVPlacement(
 						transform,
 						airbox_logic,
@@ -363,8 +365,6 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 						i*nphi +j,
 						OverlapCheck()
 					);
-
-			m_PhysicalVolumesSet.insert(las_sensor_phys);
 
 		}
 

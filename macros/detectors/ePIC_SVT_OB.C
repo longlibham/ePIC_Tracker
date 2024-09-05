@@ -45,7 +45,7 @@ namespace ePIC_SVTOB{
    	double carbon_length[2] = {54.31, 83.75};
 	double carbon_width = 3.92;
 	double si_thickness = 0.05/100.*9.37; //0.005;
-	double si_length[2] = {13.6, 11.43};
+	double si_length[2] = {13.0, 10.83};
 	double si_width = 3.9128;
 
 	double lec_length = 0.45;
@@ -61,10 +61,7 @@ namespace ePIC_SVTOB{
 
 	int n_silicon_z[2] = {4, 8};
 	int n_stave_phi[2] = {46, 70};
-	double las_overlap[2] = {
-		(si_length[0]*n_silicon_z[0] - carbon_length[0]) / (n_silicon_z[0] - 1),
-		(si_length[1]*n_silicon_z[1] - carbon_length[1]) / (n_silicon_z[1] - 1)
-	};
+
 
 }
 
@@ -136,8 +133,6 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 		svt_ob->set_int_param("n_stave_phi", ePIC_SVTOB::n_stave_phi[ilayer]);
 
 		// overlaps of LAS
-		
-		svt_ob->set_double_param("las_overlap", ePIC_SVTOB::las_overlap[ilayer]);
 		svt_ob->set_double_param("lec_length", ePIC_SVTOB::lec_length);
 		svt_ob->set_double_param("rec_length", ePIC_SVTOB::rec_length);
 		svt_ob->set_double_param("anc_length", ePIC_SVTOB::anc_length);

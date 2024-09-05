@@ -131,10 +131,7 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 
 	int n_silicon_z[2] = {4, 8};
 	int n_stave_phi[2] = {46, 70};
-	double las_overlap[2] = {
-		((si_length[0]*n_silicon_z[0] + lec_length + rec_length) - carbon_length[0]) / (n_silicon_z[0] - 1),
-		((si_length[1]*n_silicon_z[1] + lec_length + rec_length) - carbon_length[1]) / (n_silicon_z[1] - 1)
-	};
+
 	const int ob_layers = 2;
 	
 	ePIC_SVT_OB_Subsystem* svt_ob;
@@ -165,10 +162,7 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 		svt_ob->set_int_param("n_silicon_z", n_silicon_z[i]);
 		svt_ob->set_int_param("n_stave_phi", n_stave_phi[i]);
 
-		// overlaps of LAS
-		
-		svt_ob->set_double_param("las_overlap", las_overlap[i]);
-		
+		// overlaps of LAS		
 		svt_ob->SetActive();
 		svt_ob->OverlapCheck(1);
 //		svt_ob->SuperDetector("SVTOB");
