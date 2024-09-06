@@ -87,13 +87,13 @@ int ePIC_SVTIB(const int nEvents = 10000, bool use_pt = false, const double pmin
 	//
 	// build my SVT IB layers
 	//
-	int ib_layers = 1;
+	int ib_layers = 3;
     double si_radius[3] = {3.6, 4.8, 12.0};
     double si_thickness = 50e-4;
     double length = 27.;
     double lec_length = 0.45;
     double rec_length = 0.15;
-    double peri_width = 0.0525;
+    double periphery_width = 0.0;
     double tile_width = 0.9782;
 	
 	ePIC_SVTIB_Subsystem* svt_ib;
@@ -104,10 +104,13 @@ int ePIC_SVTIB(const int nEvents = 10000, bool use_pt = false, const double pmin
 		// set the parameters
 		svt_ib->set_double_param("radius", si_radius[i]);
         svt_ib->set_double_param("si_thickness", si_thickness);
-        svt_ib->set_double_param("length", length);
+		double ib_length = 0.;
+		if(periphery_width == 0.) ib_length = length + lec_length + rec_length;
+		else ib_length = length;
+        svt_ib->set_double_param("length", ib_length);
         svt_ib->set_double_param("lec_length", lec_length);
         svt_ib->set_double_param("rec_length", rec_length);
-        svt_ib->set_double_param("periphery_width", peri_width);
+        svt_ib->set_double_param("periphery_width", periphery_width);
         svt_ib->set_double_param("tile_width", tile_width);
 
 

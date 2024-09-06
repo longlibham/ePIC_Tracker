@@ -66,7 +66,7 @@ void ePIC_SVTIB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
     double tile_width = m_Params->get_double_param("tile_width") * cm;
 
     int nphi = 2*M_PI*radius/tile_width;
-    double rsu_length = length - lec_length - rec_length;
+   
 
     // construct the original cylinder
     if(!isfinite(radius) || !isfinite(length) || !isfinite(lec_length)
@@ -78,9 +78,9 @@ void ePIC_SVTIB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         gSystem->Exit(-1);
     }
 
-    G4VSolid* si_cyl = new G4Tubs("si_cylinder", radius, radius + si_thickness, rsu_length/2., 0., 2*M_PI);
+    G4VSolid* si_cyl = new G4Tubs("si_cylinder", radius, radius + si_thickness, length/2., 0., 2*M_PI);
     G4VSolid* si_sub = NULL;
-    if (peri_width > 0) si_sub = new G4Box("si_substract", peri_width/2., (si_thickness+m_redundancy)/2., (rsu_length + m_redundancy)/2.);
+    if (peri_width > 0) si_sub = new G4Box("si_substract", peri_width/2., (si_thickness+m_redundancy)/2., (length + m_redundancy)/2.);
 
     // subtract the insensitive periphery area.
     G4VSolid* si_sensitive_solid = nullptr;
@@ -136,12 +136,11 @@ void ePIC_SVTIB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
         OverlapCheck()
     );
 
-
-
     m_PhysicalVolumesSet.insert(sensor_phy);
 
-    if(peri_width > 0){ // for no dead area
-        G4VSolid* insen_solid = new G4Box("Insensitive_si", peri_width/2., si_thickness/2., rsu_length/2.);
+    if(peri_width > 0){
+         // for dead area
+        G4VSolid* insen_solid = new G4Box("Insensitive_si", peri_width/2., si_thickness/2., length/2.);
         G4LogicalVolume* insen_logic = new G4LogicalVolume(insen_solid, mat_si, "SiSubLogic");
         G4VisAttributes* insen_vis = new G4VisAttributes(col_si_insensitive);
         insen_vis->SetForceSolid(true);
@@ -176,7 +175,7 @@ void ePIC_SVTIB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 
         new G4PVPlacement(
             nullptr,
-            G4ThreeVector(0, 0, -(rsu_length + lec_length)/2. ),
+            G4ThreeVector(0, 0, -(length + lec_length)/2. ),
             lec_logic,
             "LeftEndcap_cyl",
             logicWorld,
@@ -191,7 +190,7 @@ void ePIC_SVTIB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 
         new G4PVPlacement(
             nullptr,
-            G4ThreeVector(0, 0, (rsu_length + rec_length)/2. + 2*m_nooverlap),
+            G4ThreeVector(0, 0, (length + rec_length)/2. + 2*m_nooverlap),
             rec_logic,
             "RightEndcap_cyl",
             logicWorld,
