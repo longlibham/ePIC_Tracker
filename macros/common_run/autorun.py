@@ -13,6 +13,8 @@ import os
 import sys
 import argparse
 import math
+import ROOT
+
 
 def autorun(args):
     save_path = ''

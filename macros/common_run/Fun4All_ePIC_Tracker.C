@@ -43,7 +43,6 @@ R__LOAD_LIBRARY(libfun4all.so)
 using namespace std;
 
 
-
 int Fun4All_ePIC_Tracker(
     const int nEvents = 10000,
     const string& particlename = "pi-",

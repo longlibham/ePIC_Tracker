@@ -110,9 +110,15 @@ void ePIC_SVTIB_Subsystem::SetDefaultParameters(){
 	
     set_default_double_param("radius", NAN);
     set_default_double_param("si_thickness", NAN);
-    set_default_double_param("length", NAN);
+
+    set_default_double_param("matrix_length", 0.);
+	set_default_double_param("switch_length", 0.);
+	set_default_double_param("backbone_length", 0.);
+	set_default_int_param("ntile", 0);
+
     set_default_double_param("lec_length", NAN);
     set_default_double_param("rec_length", NAN);
+	
     set_default_double_param("periphery_width", 0.);
     set_default_double_param("tile_width", 0.);
 
