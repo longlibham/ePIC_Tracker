@@ -128,8 +128,14 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	double cf_csupport_width = 0.5;
 	double k9_center_height = 0.5;
 	double si_thickness = 0.05/100*9.37;
-	double si_length[2] = {13.0, 10.83};
+	
 	double si_width = 3.9128;
+	double matrix_length = 0.3571;
+	double switch_length = 0.002;
+	double backbone_length = 0.006;
+	int nmatrix = 3;
+	int ntile[2] = {12, 10};
+
 	double n_silicon_z[2] = {4, 8};
 	double n_stave_phi[2] = {46, 70};
 	double lec_length = 0.45;
@@ -163,8 +169,15 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 		svt_ob->set_double_param("cf_csupport_width", cf_csupport_width);
 		svt_ob->set_double_param("k9_center_height", k9_center_height);
 		svt_ob->set_double_param("si_thickness", si_thickness);
-		svt_ob->set_double_param("si_length", si_length[i]);
+
 		svt_ob->set_double_param("si_width", si_width);
+		svt_ob->set_double_param("matrix_length", matrix_length);
+		svt_ob->set_double_param("switch_length", switch_length);
+		svt_ob->set_double_param("backbone_length", backbone_length);
+		svt_ob->set_int_param("nmatrix", nmatrix);
+		svt_ob->set_int_param("ntile", ntile[i]);
+
+
 		svt_ob->set_int_param("n_silicon_z", n_silicon_z[i]);
 		svt_ob->set_int_param("n_stave_phi", n_stave_phi[i]);
 		svt_ob->set_double_param("lec_length", lec_length);
