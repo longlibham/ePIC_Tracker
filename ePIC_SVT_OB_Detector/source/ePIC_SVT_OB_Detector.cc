@@ -65,8 +65,12 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	double c_w = m_Params->get_double_param("carbon_width") * cm;
 	// silicon geo parameters
 	double si_t = m_Params->get_double_param("si_thickness") * cm;
-	double si_l = m_Params->get_double_param("si_length") * cm;
 	double si_w = m_Params->get_double_param("si_width") * cm;
+	double matrix_length = m_Params->get_double_param("matrix_length") * cm;
+	double switch_length = m_Params->get_double_param("switch_length") * cm;
+	double backbone_length = m_Params->get_double_param("backbone_length") * cm;
+	double ntile = m_Params->get_int_param("ntile");
+	double nmatrix = m_Params->get_int_param("nmatrix");
 
 	double lec_length = m_Params->get_double_param("lec_length") * cm;
 	double rec_length = m_Params->get_double_param("rec_length") * cm;
@@ -81,17 +85,16 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	int  nz = m_Params->get_int_param("n_silicon_z");
 	int  nphi = m_Params->get_int_param("n_stave_phi");
 	
-	// overlaps of LAS
-	double las_overlap = (nz*(si_l + lec_length + rec_length + las_airspace + anc_length) - c_l)/(nz - 1);
+
 
 	if(!std::isfinite(r_inner) || !std::isfinite(r_outer) || !std::isfinite(c_t)||
 			!std::isfinite(c_l) || !std::isfinite(c_w) || !std::isfinite(si_t) || 
-			!std::isfinite(si_l) || !std::isfinite(si_w) || !std::isfinite(nz) || 
+			!std::isfinite(matrix_length) || !std::isfinite(si_w) || !std::isfinite(nz) || 
 			!std::isfinite(nphi)){
 		std::cout<<"PHWHERE "<< ": Bad Parameters for "<< GetName() << std::endl;
 		std::cout<<"r_inner: "<< r_inner <<" r_outer: "<< r_outer << std::endl;
 		std::cout<<"carbon_thickness: "<< c_t <<" length: "<< c_l <<" width: "<< c_w << std::endl;
-		std::cout<<"silicon_thickness: "<< si_t <<" length: "<< si_l <<" width: "<< si_w << std::endl;
+		std::cout<<"silicon_thickness: "<< si_t <<" length: "<< matrix_length <<" width: "<< si_w << std::endl;
 		std::cout<<"number of LAS in Z: "<< nz << " number of stave in phi: "<< nphi << std::endl;
 		gSystem->Exit(1);
 	}
@@ -112,147 +115,223 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 
 	// build the air box to contain the las
 	G4Material* mat_air = nist->FindOrBuildMaterial("G4_AIR");
-	double airbox_length = anc_length + las_airspace + lec_length + si_l + rec_length;
+	double airbox_length = anc_length + las_airspace + lec_length + rec_length + ntile*(backbone_length + nmatrix*(matrix_length + switch_length));
+	// overlaps of LAS
+	double las_overlap = (nz*airbox_length - c_l)/(nz - 1);
+	
 	double airbox_thickness = anc_thickness + kapton_thickness;
+	
 	G4VSolid* airbox = new G4Box("airbox", si_w/2., airbox_thickness/2., airbox_length/2.);
 	G4LogicalVolume* airbox_logic = new G4LogicalVolume(airbox, mat_air, "AirBoxLogic");
 	G4VisAttributes* air_vis = new G4VisAttributes(col_air);
 	air_vis->SetForceSolid(1);
 	airbox_logic->SetVisAttributes(air_vis);
 	
-	// build LAS
+	// build the tile container
+	double tile_length = backbone_length + nmatrix*(matrix_length + switch_length);
+	G4VSolid* tileContainer = new G4Box("tileContainer", si_w/2., si_t/2., tile_length/2.);
+	G4LogicalVolume* tileContainerLogic = new G4LogicalVolume(tileContainer, mat_air, "tileContainerLogic");
+	tileContainerLogic->SetVisAttributes(air_vis);
+
+	// build matrix contrainer
+	G4VSolid* MatrixContainer = new G4Box("MatrixContainer", si_w/2., si_t/2., matrix_length/2.);
+	G4LogicalVolume* MatrixContainerLogic = new G4LogicalVolume(MatrixContainer, mat_air, "MatrixContainerLogic");
+	MatrixContainerLogic->SetVisAttributes(air_vis);
+
 	G4Material* mat_si = nist->FindOrBuildMaterial("G4_Si");
-	G4VSolid* las_box = new G4Box("LAS_box", si_w/2.0, si_t/2.0, si_l/2.0);
-	G4VSolid* sub_box = new G4Box("sub_box", (peri_width + m_nooverlap*cm)/2., 10., (si_l + m_nooverlap*cm)/2. );
+	G4VSolid* matrix_box = new G4Box("matrix_box", si_w/2.0, si_t/2.0, matrix_length/2.0);
+	G4VSolid* sub_box = new G4Box("sub_box", (peri_width + m_nooverlap*cm)/2., 10., (matrix_length + m_nooverlap*cm)/2. );
 
 	
-	G4VSolid* sen_box = new G4SubtractionSolid("LAS_sub0", las_box, sub_box, 0,  
+	G4VSolid* sen_box = new G4SubtractionSolid("matrix_sub0", matrix_box, sub_box, 0,  
 	G4ThreeVector(-(si_w - peri_width)/2., 0., 0.));
-	sen_box = new G4SubtractionSolid("LAS_sub1", sen_box, sub_box, 0,
+	sen_box = new G4SubtractionSolid("matrix_sub1", sen_box, sub_box, 0,
 	G4ThreeVector(-peri_width/2., 0., 0.));
-	sen_box = new G4SubtractionSolid("LAS_sub2", sen_box, sub_box, 0,  
+	sen_box = new G4SubtractionSolid("matrix_sub2", sen_box, sub_box, 0,  
 	G4ThreeVector(peri_width/2., 0., 0.));
-	sen_box = new G4SubtractionSolid("LAS_sensitive", sen_box, sub_box, 0, 
+	sen_box = new G4SubtractionSolid("matrix_sensitive", sen_box, sub_box, 0, 
 	G4ThreeVector((si_w - peri_width)/2., 0., 0.));
 
-	G4LogicalVolume* las_logical = new G4LogicalVolume(peri_width > 0 ? sen_box : las_box, mat_si, "LASLogial");
-	G4VisAttributes* las_vis = new G4VisAttributes(G4Color(G4Colour::Yellow()));
-	las_vis->SetForceSolid(true);
-	las_logical->SetVisAttributes(las_vis);
+	G4LogicalVolume* matrix_logic = new G4LogicalVolume(sen_box, mat_si, "MatrixLogial");
+	G4VisAttributes* matrix_vis = new G4VisAttributes(G4Color(G4Colour::Yellow()));
+	matrix_vis->SetForceSolid(true);
+	matrix_logic->SetVisAttributes(matrix_vis);
 
 	G4VPhysicalVolume* las_phys = 
 	new G4PVPlacement(
 		nullptr,
-		G4ThreeVector(0, 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-		las_logical,
+		G4ThreeVector(0, 0, 0),
+		matrix_logic,
 		"las_sensor",
-		airbox_logic,
+		MatrixContainerLogic,
 		0,
 		0,
 		OverlapCheck()
 	);
 	m_PhysicalVolumesSet.insert(las_phys);
 
-	G4VisAttributes* insen_vis = new G4VisAttributes(col_si_insensitive);
-	insen_vis->SetForceSolid(1);
 
+	G4VisAttributes* insen_si_vis = new G4VisAttributes(col_si_insensitive);
+	insen_si_vis->SetForceSolid(1);
+
+	// periphery
+	G4VSolid* periphery_box = new G4Box("periphery_box", peri_width/2., si_t/2., matrix_length/2. );
+	G4LogicalVolume* periphery_logic = new G4LogicalVolume(periphery_box, mat_si, "Periphery_logic");
+	periphery_logic->SetVisAttributes(insen_si_vis);
+
+	new G4PVPlacement(
+		nullptr,
+		G4ThreeVector(-(si_w - peri_width)/2., 0, 0.),
+		periphery_logic,
+		"periphery",
+		MatrixContainerLogic,
+		0,
+		0,
+		OverlapCheck()
+	);
+
+	new G4PVPlacement(
+		nullptr,
+		G4ThreeVector(-peri_width/2., 0, 0.),
+		periphery_logic,
+		"periphery",
+		MatrixContainerLogic,
+		0,
+		1,
+		OverlapCheck()
+	);
+
+	new G4PVPlacement(
+		nullptr,
+		G4ThreeVector(peri_width/2., 0, 0.),
+		periphery_logic,
+		"periphery",
+		MatrixContainerLogic,
+		0,
+		2,
+		OverlapCheck()
+	);
+
+	new G4PVPlacement(
+		nullptr,
+		G4ThreeVector((si_w - peri_width)/2., 0, 0.),
+		periphery_logic,
+		"periphery",
+		MatrixContainerLogic,
+		0,
+		3,
+		OverlapCheck()
+	);
+	
+	// backbone
+	G4VSolid* backbone_box = new G4Box("backbone_box", si_w/2., si_t/2., backbone_length/2.);
+	G4LogicalVolume* backboneLogic = new G4LogicalVolume(backbone_box, mat_si, "backboneLogic");
+	backboneLogic->SetVisAttributes(insen_si_vis);
+
+	// power switch
+	G4VSolid* switch_box = new G4Box("switch_box", si_w/2., si_t/2., switch_length/2.);
+	G4LogicalVolume* switchLogic = new G4LogicalVolume(switch_box, mat_si, "switchLogic");
+	switchLogic->SetVisAttributes(insen_si_vis);
+
+	//put the backbone matrix and power switch in to tile box
+	double current_z = -tile_length/2. + backbone_length/2.;
+	new G4PVPlacement(
+		nullptr,
+		G4ThreeVector(0, 0, current_z),
+		backboneLogic,
+		"backboneLayer",
+		tileContainerLogic,
+		0,
+		0,
+		OverlapCheck()
+	);
+
+	for(int i=0; i<nmatrix; i++){
+		if (i == 0) current_z += (backbone_length/2. + matrix_length/2.);
+		else current_z += (switch_length + matrix_length)/2.;
+
+		new G4PVPlacement(
+			nullptr,
+			G4ThreeVector(0, 0, current_z),
+			MatrixContainerLogic,
+			"MatrixContainLayer",
+			tileContainerLogic,
+			0,
+			0,
+			OverlapCheck()
+		);
+
+		current_z += (matrix_length + switch_length)/2.;
+
+		new G4PVPlacement(
+			nullptr,
+			G4ThreeVector(0, 0, current_z),
+			switchLogic,
+			"switchLayer",
+			tileContainerLogic,
+			0,
+			0,
+			OverlapCheck()
+		);
+	}
+
+	// put the tile in to the airbox
+	for(int i = 0; i<ntile; i++){
+		new G4PVPlacement(
+			nullptr,
+			G4ThreeVector(0, 0, -airbox_length/2. + anc_length + las_airspace + lec_length + (2*i+1)*tile_length/2.),
+			tileContainerLogic,
+			"tileContainerLayer",
+			airbox_logic,
+			0,
+			i,
+			OverlapCheck()
+		);
+	}
 
 	//Endcaps
 	// lec
-	if(peri_width > 0){ 
-		G4VSolid* lec_box = new G4Box("lec_box", si_w/2., si_t/2., lec_length/2.);
-		G4LogicalVolume* lec_logic = new G4LogicalVolume(lec_box, mat_si, "LECLogic");
-		lec_logic->SetVisAttributes(insen_vis);
+	G4VSolid* lec_box = new G4Box("lec_box", si_w/2., si_t/2., lec_length/2.);
+	G4LogicalVolume* lec_logic = new G4LogicalVolume(lec_box, mat_si, "LECLogic");
+	lec_logic->SetVisAttributes(insen_si_vis);
 
-		new G4PVPlacement(
-			nullptr,
-			G4ThreeVector(0, 0, -(airbox_length/2. - anc_length - las_airspace - lec_length/2.)),
-			lec_logic,
-			"lec_si",
-			airbox_logic,
-			0,
-			0,
-			OverlapCheck()
-		);
-	}
+	new G4PVPlacement(
+		nullptr,
+		G4ThreeVector(0, 0, -(airbox_length/2. - anc_length - las_airspace - lec_length/2.)),
+		lec_logic,
+		"lec_si",
+		airbox_logic,
+		0,
+		0,
+		OverlapCheck()
+	);
+
 	
 	//rec
-	if(peri_width > 0){
-		G4VSolid* rec_box = new G4Box("rec_box", si_w/2., si_t/2., rec_length/2.);
-		G4LogicalVolume* rec_logic = new G4LogicalVolume(rec_box, mat_si, "RECLogic");
-		rec_logic->SetVisAttributes(insen_vis);
+	G4VSolid* rec_box = new G4Box("rec_box", si_w/2., si_t/2., rec_length/2.);
+	G4LogicalVolume* rec_logic = new G4LogicalVolume(rec_box, mat_si, "RECLogic");
+	rec_logic->SetVisAttributes(insen_si_vis);
 
-		new G4PVPlacement(
-			nullptr,
-			G4ThreeVector(0, 0, (airbox_length - rec_length)/2.),
-			rec_logic,
-			"rec_si",
-			airbox_logic,
-			0,
-			0,
-			OverlapCheck()
-		);
-	}
+	new G4PVPlacement(
+		nullptr,
+		G4ThreeVector(0, 0, (airbox_length - rec_length)/2.),
+		rec_logic,
+		"rec_si",
+		airbox_logic,
+		0,
+		0,
+		OverlapCheck()
+	);
 
-	// periphery
-	if( peri_width > 0){
-		G4VSolid* periphery_box = new G4Box("periphery_box", peri_width/2., si_t/2., si_l/2. );
-		G4LogicalVolume* periphery_logic = new G4LogicalVolume(periphery_box, mat_si, "Periphery_logic");
-		periphery_logic->SetVisAttributes(insen_vis);
-
-		new G4PVPlacement(
-			nullptr,
-			G4ThreeVector(-(si_w - peri_width)/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-			periphery_logic,
-			"periphery",
-			airbox_logic,
-			0,
-			0,
-			OverlapCheck()
-		);
-
-		new G4PVPlacement(
-			nullptr,
-			G4ThreeVector(-peri_width/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-			periphery_logic,
-			"periphery",
-			airbox_logic,
-			0,
-			1,
-			OverlapCheck()
-		);
-
-		new G4PVPlacement(
-			nullptr,
-			G4ThreeVector(peri_width/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-			periphery_logic,
-			"periphery",
-			airbox_logic,
-			0,
-			2,
-			OverlapCheck()
-		);
-
-		new G4PVPlacement(
-			nullptr,
-			G4ThreeVector((si_w - peri_width)/2., 0, -(airbox_length/2. - anc_length - las_airspace - lec_length - si_l/2.)),
-			periphery_logic,
-			"periphery",
-			airbox_logic,
-			0,
-			3,
-			OverlapCheck()
-		);
-	}
 
 	// ancASIC
 	G4VSolid* anc_box = new G4Box("anc_box", anc_length/2., anc_thickness/2., anc_length/2.);
 	G4LogicalVolume* anc_logic = new G4LogicalVolume(anc_box, mat_si, "AncLogic");
-	anc_logic->SetVisAttributes(insen_vis);
+	anc_logic->SetVisAttributes(insen_si_vis);
 
 	new G4PVPlacement(
 		nullptr,
-		G4ThreeVector(-si_w/4., -(airbox_thickness - kapton_thickness)/2., -(airbox_length/2. - anc_length/2.)),
+		G4ThreeVector(-si_w/4., airbox_thickness/2. - kapton_thickness - anc_thickness/2., -(airbox_length/2. - anc_length/2.)),
 		anc_logic,
 		"ancASIC",
 		airbox_logic,
@@ -263,7 +342,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 
 	new G4PVPlacement(
 		nullptr,
-		G4ThreeVector(si_w/4, -(airbox_thickness - kapton_thickness)/2., -(airbox_length/2. - anc_length/2.)),
+		G4ThreeVector(si_w/4, airbox_thickness/2. - kapton_thickness - anc_thickness/2., -(airbox_length/2. - anc_length/2.)),
 		anc_logic,
 		"ancASIC",
 		airbox_logic,
@@ -291,14 +370,19 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 		OverlapCheck()
 	);
 
-	// placement of staves
-	if (r_inner + si_t + c_t >= r_outer){
-		std::cout<<"Overlaps will happen between inner and outer layers, please check parameters blew: "<<std::endl;
-		std::cout<<"r_inner: "<< r_inner <<std::endl;
-		std::cout<<"silicon thickness: "<< si_t << std::endl;
-		std::cout<<"Carbon thickness: "<< c_t <<std::endl;
-		gSystem->Exit(1);
-	}
+	// // test: put the airbox in the logicWorld
+	// new G4PVPlacement(
+	// 	nullptr,
+	// 	G4ThreeVector(0, 0, 0),
+	// 	airbox_logic,
+	// 	"airbox_phys",
+	// 	logicWorld,
+	// 	0,
+	// 	0,
+	// 	OverlapCheck()
+	// );
+
+	// return;
 
 
 	for(int i =0; i < nz; i++){ // loop LAS' in z direction

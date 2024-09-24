@@ -118,8 +118,12 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	double carbon_width = 3.92;
 	//double si_thickness = 0.005;
 	double si_thickness = 0.05/100.*9.37; //0.005;
-	double si_length[2] = {13., 10.83};
 	double si_width = 3.9128;
+	double matrix_length = 0.3571;
+	double switch_length = 0.002;
+	double backbone_length = 0.006;
+	int nmatrix = 3;
+	int ntile[2] = {12, 10};
 
 	double lec_length = 0.45;
 	double rec_length = 0.15;
@@ -132,7 +136,7 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	int n_silicon_z[2] = {4, 8};
 	int n_stave_phi[2] = {46, 70};
 
-	const int ob_layers = 2;
+	const int ob_layers = 1;
 	
 	ePIC_SVT_OB_Subsystem* svt_ob;
 	for(int i = 0; i<ob_layers; i++){	
@@ -148,12 +152,12 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 		svt_ob->set_double_param("carbon_width", carbon_width);
 		// LAS geo 
 		svt_ob->set_double_param("si_thickness", si_thickness);
-		
-		double las_length = 0.;
-		if(peri_width == 0.) las_length = si_length[i] + lec_length + rec_length;
-		else las_length = si_length[i];
-		svt_ob->set_double_param("si_length", las_length);
 		svt_ob->set_double_param("si_width", si_width);
+		svt_ob->set_double_param("matrix_length", matrix_length);
+		svt_ob->set_double_param("switch_length", switch_length);
+		svt_ob->set_double_param("backbone_length", backbone_length);
+		svt_ob->set_int_param("ntile", ntile[i]);
+		svt_ob->set_int_param("nmatrix", nmatrix);
 		svt_ob->set_double_param("lec_length", lec_length);
 		svt_ob->set_double_param("rec_length", rec_length);
 		svt_ob->set_double_param("anc_length", anc_length);

@@ -45,15 +45,19 @@ namespace ePIC_SVTOB{
    	double carbon_length[2] = {54.31, 83.75};
 	double carbon_width = 3.92;
 	double si_thickness = 0.05/100.*9.37; //0.005;
-	double si_length[2] = {13.6, 11.43};
 	double si_width = 3.9128;
+	double matrix_length = 0.3571;
+	double switch_length = 0.002;
+	double backbone_length = 0.006;
+	int nmatrix = 3;
+	int ntile[2] = {12, 10};
 
 	double lec_length = 0.45;
 	double rec_length = 0.15;
 	double anc_length = 1.0;
 	double anc_thickness = 0.03;
 	double las_airspace = 0.45;
-	double periphery_width =0.; // 0.0525; //0.;
+	double periphery_width = 0.0525; //0.0525; //0.;
 	double kapton_thickness = 0.005;
 
 	double r_inner[2] = {27.1, 41.8};
@@ -127,12 +131,14 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 		svt_ob->set_double_param("carbon_width", ePIC_SVTOB::carbon_width);
 		// LAS geo 
 		svt_ob->set_double_param("si_thickness", ePIC_SVTOB::si_thickness);
-		
-		double las_length = 0;
-		if(ePIC_SVTOB::periphery_width == 0.) las_length = ePIC_SVTOB::si_length[ilayer] + ePIC_SVTOB::lec_length + ePIC_SVTOB::rec_length;
-		else las_length = ePIC_SVTOB::si_length[ilayer];
-		svt_ob->set_double_param("si_length", las_length);
 		svt_ob->set_double_param("si_width", ePIC_SVTOB::si_width);
+
+		svt_ob->set_double_param("matrix_length", ePIC_SVTOB::matrix_length);
+		svt_ob->set_double_param("switch_length", ePIC_SVTOB::switch_length);
+		svt_ob->set_double_param("backbone_length", ePIC_SVTOB::backbone_length);
+		svt_ob->set_int_param("ntile", ePIC_SVTOB::ntile[ilayer]);
+		svt_ob->set_int_param("nmatrix", ePIC_SVTOB::nmatrix);
+
 		svt_ob->set_int_param("n_silicon_z", ePIC_SVTOB::n_silicon_z[ilayer]);
 		svt_ob->set_int_param("n_stave_phi", ePIC_SVTOB::n_stave_phi[ilayer]);
 

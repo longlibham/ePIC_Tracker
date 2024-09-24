@@ -90,10 +90,15 @@ int ePIC_SVTIB(const int nEvents = 10000, bool use_pt = false, const double pmin
 	int ib_layers = 3;
     double si_radius[3] = {3.6, 4.8, 12.0};
     double si_thickness = 50e-4;
-    double length = 27.;
+
+	double matrix_length = 0.3571;
+	double switch_length = 0.002;
+	double backbone_length = 0.006;
+	int ntile = 25;
+
     double lec_length = 0.45;
     double rec_length = 0.15;
-    double periphery_width = 0.0;
+    double periphery_width = 0.0525;
     double tile_width = 0.9782;
 	
 	ePIC_SVTIB_Subsystem* svt_ib;
@@ -104,10 +109,12 @@ int ePIC_SVTIB(const int nEvents = 10000, bool use_pt = false, const double pmin
 		// set the parameters
 		svt_ib->set_double_param("radius", si_radius[i]);
         svt_ib->set_double_param("si_thickness", si_thickness);
-		double ib_length = 0.;
-		if(periphery_width == 0.) ib_length = length + lec_length + rec_length;
-		else ib_length = length;
-        svt_ib->set_double_param("length", ib_length);
+		
+        svt_ib->set_double_param("matrix_length", matrix_length);
+		svt_ib->set_double_param("switch_length", switch_length);
+		svt_ib->set_double_param("backbone_length", backbone_length);
+		svt_ib->set_int_param("ntile", ntile);
+		
         svt_ib->set_double_param("lec_length", lec_length);
         svt_ib->set_double_param("rec_length", rec_length);
         svt_ib->set_double_param("periphery_width", periphery_width);

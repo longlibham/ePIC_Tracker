@@ -115,8 +115,13 @@ void ePIC_SVT_OB_Subsystem::SetDefaultParameters(){
 	set_default_double_param("carbon_length", 0.);
 	set_default_double_param("carbon_width", 0.);
 	set_default_double_param("si_thickness", 0.);
-	set_default_double_param("si_length", 0.);
 	set_default_double_param("si_width", 0.);
+	set_default_double_param("matrix_length", 0.);
+	set_default_double_param("switch_length", 0.);
+	set_default_double_param("backbone_length", 0.);
+	set_default_int_param("ntile", 0);
+	set_default_int_param("nmatrix", 0);
+
 	set_default_int_param("n_silicon_z", 0);
 	set_default_int_param("n_stave_phi", 0);
 	set_default_double_param("lec_length", 0.);
