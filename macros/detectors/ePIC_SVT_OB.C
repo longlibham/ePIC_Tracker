@@ -40,12 +40,18 @@ R__LOAD_LIBRARY(libePIC_SVT_OB_Detector.so)
 
 using namespace std;
 
-namespace ePIC_SVTOB{
-	double r_inner[2] = {27.0, 41.7};
-	double r_outer[2] = {28.2, 42.9};
+namespace Enable{
+	bool ePIC_SVTOB = false;
+	bool ePIC_SVTOB_OVERLAPCHECK = false;
+}  // name space Enable
 
+namespace ePIC_SVTOB{
+
+	const int OBScheme = 0;
+	double r_inner[2][2] = {{26.5, 39.5}, {22., 43.8}};
+	double r_outer[2][2] = {{27.7, 40.7}, {23.2, 45.}};
 	double carbon_thickness = 0.2/100*26.356;
-	double carbon_length[2] = {53.2, 89.04};
+	double carbon_length[2][2] = {{53.2, 79.8}, {44.532, 89.064}};
 	double carbon_width = 3.92;
 	double cf_leftendcap = 1.2;
 	double cf_rightendcap = 1.2;
@@ -64,9 +70,9 @@ namespace ePIC_SVTOB{
 	double switch_length = 0.002;
 	double backbone_length = 0.006;
 	int nmatrix = 3;
-	int ntile[2] = {12, 10};
+	int ntile[2][2] = {{12, 12}, {10, 10}};
 
-	double n_silicon_z[2] = {4, 8};
+	double n_silicon_z[2][2] = {{4, 6}, {4, 8}};
 	double n_stave_phi[2] = {46, 70};
 	double lec_length = 0.45;
 	double rec_length = 0.15;
@@ -76,13 +82,11 @@ namespace ePIC_SVTOB{
 	double peri_width = 0.0525;
 	double kapton_thickness = 100./10000.;
 
+	
+
 
 }
 
-namespace Enable{
-	bool ePIC_SVTOB = false;
-	bool ePIC_SVTOB_OVERLAPCHECK = false;
-}  // name space Enable
 
 void ePIC_SVTOB_Init(){
 
@@ -105,6 +109,9 @@ void SVTOBFastKalmanFilterConfigSVTX(PHG4TrackFastSim* kalman_filter, int ilay, 
 	if(addproj)TRACKING::ProjectionNames.insert(Form("SVTXOB_%d", ilay));
 }
 
+void SVTOBHitConfig(G4HitNtuple* g4hit, int ilay){
+	g4hit->AddNode("SVTXOB", ilay);
+}
 
 double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 
@@ -120,7 +127,7 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 	//
 	// L3/L4 OB
 
-	if(ePIC_SVTOB::r_inner[0] <= radius){
+	if(ePIC_SVTOB::r_inner[ePIC_SVTOB::OBScheme][0] <= radius){
 		cout<<"Geometry overlap happens, please check the radius of each layer!"<<endl;
 		exit(-1);
 	}
@@ -133,10 +140,10 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 		svt_ob = new ePIC_SVT_OB_Subsystem("SVTXOB", ilayer);
 		
 		// set the parameter
-		svt_ob->set_double_param("r_inner", ePIC_SVTOB::r_inner[ilayer]);
-		svt_ob->set_double_param("r_outer", ePIC_SVTOB::r_outer[ilayer]);
+		svt_ob->set_double_param("r_inner", ePIC_SVTOB::r_inner[ePIC_SVTOB::OBScheme][ilayer]);
+		svt_ob->set_double_param("r_outer", ePIC_SVTOB::r_outer[ePIC_SVTOB::OBScheme][ilayer]);
 		svt_ob->set_double_param("carbon_thickness", ePIC_SVTOB::carbon_thickness);
-		svt_ob->set_double_param("carbon_length", ePIC_SVTOB::carbon_length[ilayer]);
+		svt_ob->set_double_param("carbon_length", ePIC_SVTOB::carbon_length[ePIC_SVTOB::OBScheme][ilayer]);
 		svt_ob->set_double_param("carbon_width", ePIC_SVTOB::carbon_width);
 		svt_ob->set_double_param("cf_leftendcap", ePIC_SVTOB::cf_leftendcap);
 		svt_ob->set_double_param("cf_rightendcap", ePIC_SVTOB::cf_rightendcap);
@@ -154,10 +161,10 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 		svt_ob->set_double_param("switch_length", ePIC_SVTOB::switch_length);
 		svt_ob->set_double_param("backbone_length", ePIC_SVTOB::backbone_length);
 		svt_ob->set_int_param("nmatrix", ePIC_SVTOB::nmatrix);
-		svt_ob->set_int_param("ntile", ePIC_SVTOB::ntile[ilayer]);
+		svt_ob->set_int_param("ntile", ePIC_SVTOB::ntile[ePIC_SVTOB::OBScheme][ilayer]);
 
 		svt_ob->set_double_param("si_width", ePIC_SVTOB::si_width);
-		svt_ob->set_int_param("n_silicon_z", ePIC_SVTOB::n_silicon_z[ilayer]);
+		svt_ob->set_int_param("n_silicon_z", ePIC_SVTOB::n_silicon_z[ePIC_SVTOB::OBScheme][ilayer]);
 		svt_ob->set_int_param("n_stave_phi", ePIC_SVTOB::n_stave_phi[ilayer]);
 		svt_ob->set_double_param("lec_length", ePIC_SVTOB::lec_length);
 		svt_ob->set_double_param("rec_length", ePIC_SVTOB::rec_length);
@@ -174,20 +181,22 @@ double ePIC_SVT_OB(PHG4Reco* g4Reco, const int nlayers = 2, double radius = 0){
 		svt_ob->OverlapCheck(OverlapCheck);
 		g4Reco->registerSubsystem(svt_ob);
 
-		SVTOBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilter, ilayer, (ePIC_SVTOB::r_inner[ilayer]+ePIC_SVTOB::r_outer[ilayer])/2., false);//true);
-		SVTOBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterInnerTrack, ilayer, (ePIC_SVTOB::r_inner[ilayer]+ ePIC_SVTOB::r_outer[ilayer])/2., false);
-		SVTOBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterSiliconTrack, ilayer, (ePIC_SVTOB::r_inner[ilayer]+ ePIC_SVTOB::r_outer[ilayer])/2., false);
+		SVTOBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilter, ilayer, (ePIC_SVTOB::r_inner[ePIC_SVTOB::OBScheme][ilayer]+ePIC_SVTOB::r_outer[ePIC_SVTOB::OBScheme][ilayer])/2., false);//true);
+		SVTOBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterInnerTrack, ilayer, (ePIC_SVTOB::r_inner[ePIC_SVTOB::OBScheme][ilayer]+ ePIC_SVTOB::r_outer[ePIC_SVTOB::OBScheme][ilayer])/2., false);
+		SVTOBFastKalmanFilterConfigSVTX(TRACKING::FastKalmanFilterSiliconTrack, ilayer, (ePIC_SVTOB::r_inner[ePIC_SVTOB::OBScheme][ilayer]+ ePIC_SVTOB::r_outer[ePIC_SVTOB::OBScheme][ilayer])/2., false);
 	
+		// add G4Hit
+		SVTOBHitConfig(TRACKING::g4hit, ilayer);
 	
 	}
 
 	// update the BlackHole geometry 
-	BlackHoleGeometry::max_radius = ePIC_SVTOB::r_outer[nlayers-1];
-	BlackHoleGeometry::min_z = -ePIC_SVTOB::carbon_length[nlayers-1]/2.;
-	BlackHoleGeometry::max_z = ePIC_SVTOB::carbon_length[nlayers-1]/2.;
+	BlackHoleGeometry::max_radius = ePIC_SVTOB::r_outer[ePIC_SVTOB::OBScheme][nlayers-1];
+	BlackHoleGeometry::min_z = -ePIC_SVTOB::carbon_length[ePIC_SVTOB::OBScheme][nlayers-1]/2.;
+	BlackHoleGeometry::max_z = ePIC_SVTOB::carbon_length[ePIC_SVTOB::OBScheme][nlayers-1]/2.;
 	BlackHoleGeometry::gap = no_overlapp;
 
-	return ePIC_SVTOB::r_outer[nlayers-1];
+	return ePIC_SVTOB::r_outer[ePIC_SVTOB::OBScheme][nlayers-1];
 }
 
 #endif
