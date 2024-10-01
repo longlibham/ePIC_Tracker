@@ -111,10 +111,10 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	// build my SVT OB layers
 	//
 	// L3/L4 OB
-	double r_inner[2] = {27., 41.7};
-	double r_outer[2] = {27.8, 42.9};
+	double r_inner[2] = {26.5, 39.5};
+	double r_outer[2] = {27.7, 40.7};
 	double carbon_thickness = 0.2/100*26.356;//0.5*0.03;
-   	double carbon_length[2] = {54.31, 83.75};
+   	double carbon_length[2] = {53.2, 79.8};
 	double carbon_width = 3.92;
 	//double si_thickness = 0.005;
 	double si_thickness = 0.05/100.*9.37; //0.005;
@@ -123,7 +123,7 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	double switch_length = 0.002;
 	double backbone_length = 0.006;
 	int nmatrix = 3;
-	int ntile[2] = {12, 10};
+	int ntile[2] = {12, 12};
 
 	double lec_length = 0.45;
 	double rec_length = 0.15;
@@ -133,7 +133,7 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	double peri_width = 0.0525; // 0;
 	double kapton_thickness = 0.01;
 
-	int n_silicon_z[2] = {4, 8};
+	int n_silicon_z[2] = {4, 6};
 	int n_stave_phi[2] = {46, 70};
 
 	const int ob_layers = 1;
