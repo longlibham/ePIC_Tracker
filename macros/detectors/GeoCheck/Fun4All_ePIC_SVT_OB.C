@@ -112,22 +112,22 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	//
 	// L3/L4 OB
 	
-	double r_inner[2] = {22., 43.8};//{26.5, 39.5};
-	double r_outer[2] = {23.2, 45.};//{27.7, 40.7};
+	double r_inner[2] = {26.475, 41.675};//{22., 43.8};//{26.5, 39.5};
+	double r_outer[2] = {27.925, 43.125};//{23.2, 45.};//{27.7, 40.7};
 
-	double carbon_thickness = 0.2/100*26.356;
-	double carbon_length[2] = {44.532, 89.064};//{53.2, 79.8};
+	double carbon_thickness = 100./10000.; //0.2/100*26.356;
+	double carbon_length[2] = {53.2, 89.064};//{44.532, 89.064};//{53.2, 79.8};
 	double carbon_width = 3.92;
 	double cf_leftendcap = 1.2;
 	double cf_rightendcap = 1.2;
-	double cf_margin = 0.1;
+	double cf_margin = 0.1; //carbon_thickness;
 	double cf_curve_radius = 9.0115;
 	double cf_center_height = 0.85;
 	double cf_edge_height = 0.351;
 	double oring_radius = 0.25;
 	double oring_spacing = 0.3;
 	double cf_csupport_width = 0.5;
-	double k9_center_height = 0.5;
+	double k9_center_height = 0.35;
 	double si_thickness = 0.05/100*9.37;
 	
 	double si_width = 3.9128;
@@ -135,7 +135,7 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	double switch_length = 0.002;
 	double backbone_length = 0.006;
 	int nmatrix = 3;
-	int ntile[2] = {10, 10};//{12, 12};
+	int ntile[2] = {12, 10};//{12, 12};
 
 	double n_silicon_z[2] = {4, 8};//{4, 6};
 	double n_stave_phi[2] = {46, 70};
@@ -145,8 +145,8 @@ int Fun4All_ePIC_SVT_OB(const int nEvents = 10000, bool use_pt = false, const do
 	double anc_thickness = 300./10000.;
 	double las_airspace = 0.6;
 	double peri_width = 0.0525;
-	double kapton_thickness = 100./10000.;
-	const int ob_layers = 2;
+	double kapton_thickness = 50./10000.;
+	const int ob_layers = 1;
 	
 	ePIC_SVT_OB_Subsystem* svt_ob;
 	for(int i = 0; i<ob_layers; i++){	

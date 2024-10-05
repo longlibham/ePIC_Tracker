@@ -47,15 +47,15 @@ namespace Enable{
 
 namespace ePIC_SVTOB{
 
-	const int OBScheme = 0;
-	double r_inner[2][2] = {{26.5, 39.5}, {22., 43.8}};
-	double r_outer[2][2] = {{27.7, 40.7}, {23.2, 45.}};
-	double carbon_thickness = 0.2/100*26.356;
-	double carbon_length[2][2] = {{53.2, 79.8}, {44.532, 89.064}};
+	const int OBScheme = 2;
+	double r_inner[3][2] = {{26.5, 39.5}, {22., 43.8}, {26.475, 41.675}};
+	double r_outer[3][2] = {{27.7, 40.7}, {23.2, 45.}, {27.925, 43.125}};
+	double carbon_thickness =  0.01; //0.2/100*26.356;
+	double carbon_length[3][2] = {{53.2, 79.8}, {44.532, 89.064}, {53.2, 89.064}};
 	double carbon_width = 3.92;
 	double cf_leftendcap = 1.2;
 	double cf_rightendcap = 1.2;
-	double cf_margin = 0.1;
+	double cf_margin = carbon_thickness;
 	double cf_curve_radius = 9.0115;
 	double cf_center_height = 0.85;
 	double cf_edge_height = 0.351;
@@ -70,9 +70,9 @@ namespace ePIC_SVTOB{
 	double switch_length = 0.002;
 	double backbone_length = 0.006;
 	int nmatrix = 3;
-	int ntile[2][2] = {{12, 12}, {10, 10}};
+	int ntile[3][2] = {{12, 12}, {10, 10}, {12, 10}};
 
-	double n_silicon_z[2][2] = {{4, 6}, {4, 8}};
+	double n_silicon_z[3][2] = {{4, 6}, {4, 8}, {4, 8}};
 	double n_stave_phi[2] = {46, 70};
 	double lec_length = 0.45;
 	double rec_length = 0.15;
@@ -80,7 +80,7 @@ namespace ePIC_SVTOB{
 	double anc_thickness = 300./10000.;
 	double las_airspace = 0.6;
 	double peri_width = 0.0525;
-	double kapton_thickness = 100./10000.;
+	double kapton_thickness = 50./10000.;
 
 	
 

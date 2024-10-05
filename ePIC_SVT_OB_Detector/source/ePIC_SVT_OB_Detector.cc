@@ -47,7 +47,7 @@ ePIC_SVT_OB_Detector::ePIC_SVT_OB_Detector(PHG4Subsystem* subsys, PHCompositeNod
 	:PHG4Detector(subsys, Node, dname)
 	, m_Params(parameters)
 	, m_Layer(lyr){
-
+		DefineMaterials();
 }
 
 int ePIC_SVT_OB_Detector::IsInDetector(G4VPhysicalVolume* volume) const{
@@ -59,7 +59,15 @@ int ePIC_SVT_OB_Detector::IsInDetector(G4VPhysicalVolume* volume) const{
 }
 
 void ePIC_SVT_OB_Detector::DefineMaterials(){
+	// build the k9 foam material
+	G4NistManager* nist = G4NistManager::Instance();
+	G4Material* mat_air = nist->FindOrBuildMaterial("G4_AIR");
+	G4Material* mat_c = nist->FindOrBuildMaterial("G4_C");
 
+	double density = 0.11*g/cm3;
+	G4Material* mat_k9 = new G4Material("K9Foam", density, 2);
+	mat_k9->AddMaterial(mat_air, 97*perCent);
+	mat_k9->AddMaterial(mat_c, 3*perCent);
 	cout<<*(G4Material::GetMaterialTable())<<endl;
 
 }
@@ -136,14 +144,12 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	G4Colour col_kapton = G4Colour(45./255., 179./255., 7./255., .7);
 	G4Colour col_k9foam = G4Colour(137./255., 248./255., 173./255., 1.);
 
-
-	// construct curved carbon stave
-	// cout<<*(G4Material::GetMaterialTable())<<endl;
 	G4NistManager* nist = G4NistManager::Instance();
 	G4Material* mat_cf = nist->FindOrBuildMaterial("CF");
 	G4Material* mat_air = nist->FindOrBuildMaterial("G4_AIR");
 	G4Material* mat_kapton = nist->FindOrBuildMaterial("G4_KAPTON");
 	G4Material* mat_si = nist->FindOrBuildMaterial("G4_Si");
+	G4Material* mat_k9 = nist->FindOrBuildMaterial("K9Foam");
 
 
 	// G4VisAttributes
@@ -181,7 +187,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 		(cf_curve_radius - cf_center_height/2.)*(cf_curve_radius - cf_center_height/2.)
 	);
 	double strip_x = cf_edge_height/2.*(cf_curve_radius - cf_center_height/2.)*2/intersection_chord_length;
-	strip_x = intersection_chord_length/2. - si_w/2.- cf_margin;
+	strip_x = intersection_chord_length/2. - si_w/2. - cf_margin/2.;
 
 
 	double box_x = 2*strip_x;
@@ -209,7 +215,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	// // strip the center
 	box_x = si_w;//intersection_chord_length - 2*strip_x - cf_margin;
 	box_y = 1. * cm;
-	box_z = stave_length - 2*c_t - 2*m_nooverlap;
+	box_z = stave_length - 2*c_t;
 
 	cf_strip_box = new G4Box("strip_box_center", box_x/2., box_y/2., box_z/2.);
 	cf_stave = new G4SubtractionSolid("cf_stave_strip_center", cf_stave, cf_strip_box, nullptr, 
@@ -218,11 +224,11 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 
 
 	// o-rings
-	G4VSolid* cf_strip_oring = new G4Tubs("strip_oring", 0., oring_r, c_t + m_nooverlap, 0., 2*M_PI);
+	G4VSolid* cf_strip_oring = new G4Tubs("strip_oring", 0., oring_r, c_l + 2*c_t + m_nooverlap, 0., 2*M_PI);
 	cf_stave = new G4SubtractionSolid("cf_stave_strip_oring_left", cf_stave, cf_strip_oring, nullptr,
-		G4ThreeVector(-(oring_spacing+oring_r), cf_curve_radius - cf_center_height/2., -stave_length/2.));
+		G4ThreeVector(-(oring_spacing+oring_r), cf_curve_radius - cf_center_height/2., 0.));//-stave_length/2.));
 	cf_stave = new G4SubtractionSolid("cf_stave_strip_oring_right", cf_stave, cf_strip_oring, nullptr,
-		G4ThreeVector((oring_spacing+oring_r), cf_curve_radius - cf_center_height/2., -stave_length/2.));
+		G4ThreeVector((oring_spacing+oring_r), cf_curve_radius - cf_center_height/2., 0.));//-stave_length/2.));
 	
 	//C-shape support structure
 	box_x = cf_csupport_width;
@@ -351,7 +357,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	G4VSolid* k9tub2 = new G4Tubs("k9tub2", tub_rinner, tub_router, tub_length/2., sta_phi, sto_phi);
 
 	G4VSolid* k9_curved_solid = new G4IntersectionSolid("k9_curved_solid", k9tub1, k9tub2, nullptr,
-		G4ThreeVector(0, 2*cf_curve_radius-k9_center_height, 0.));
+		G4ThreeVector(0, 2*tub_router - k9_center_height, 0.));
 	
 	box_x = 10.*cm + m_nooverlap;
 	box_y = 10.*cm;
@@ -368,11 +374,11 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 	k9_curved_solid = new G4SubtractionSolid("k9_curved_strip_center", k9_curved_solid, cf_strip_box, nullptr,
 		G4ThreeVector(0., cf_curve_radius-k9_center_height/2., 0.));
 
-	G4LogicalVolume* k9foam_logic = new G4LogicalVolume(k9_curved_solid, mat_cf, "K9FoamLogic");	
+	G4LogicalVolume* k9foam_logic = new G4LogicalVolume(k9_curved_solid, mat_k9, "K9FoamLogic");	
 	k9foam_logic->SetVisAttributes(k9foam_vis);
 
-	for(int i = 0; i<nz/4; i++){
-		posz = -stave_length/2. + cf_lec + i*(2*las_active_length + lec_length + rec_length) + (lec_length+rec_length)/2.;
+	for(int i = 0; i<nz/2; i++){
+		posz = -stave_length/2. + cf_lec + i*(las_active_length + lec_length);
 		posy = -anc_thickness -kapton_thickness -(cf_center_height - k9_center_height)/2.;
 		new G4PVPlacement(
 			nullptr,
@@ -385,7 +391,7 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 			OverlapCheck()
 		);
 
-		posz = stave_length/2. - cf_rec - las_active_length - i*(las_active_length + lec_length + rec_length) -(lec_length + rec_length)/2.;
+		posz = stave_length/2. - cf_rec - las_active_length - i*(las_active_length + lec_length);
 		new G4PVPlacement(
 			nullptr,
 			G4ThreeVector(0., posy, posz),
@@ -865,18 +871,8 @@ void ePIC_SVT_OB_Detector::ConstructMe(G4LogicalVolume* logicWorld){
 
 	}
 
-	// new G4PVPlacement(
-	// 	nullptr,
-	// 	G4ThreeVector(0., 0., 0.),
-	// 	cf_stave_container_logic,
-	// 	"CFStaveContainer",
-	// 	logicWorld,
-	// 	0,
-	// 	0,
-	// 	OverlapCheck()
-	// );
 
-	// return;
+	return;
 
 }
 

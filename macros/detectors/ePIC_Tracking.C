@@ -14,6 +14,7 @@
 #include <trackreco/PHRaveVertexing.h>
 #include <g4trackfastsim/PHG4TrackFastSimEval.h>
 #include <fun4all/Fun4AllServer.h>
+#include <G4HitNtuple.h>
 
 #include <iostream>
 #include <fstream>
@@ -37,6 +38,7 @@ namespace TRACKING{
 	PHG4TrackFastSim* FastKalmanFilter(nullptr);
 	PHG4TrackFastSim* FastKalmanFilterSiliconTrack(nullptr);
 	PHG4TrackFastSim* FastKalmanFilterInnerTrack(nullptr);
+	G4HitNtuple* g4hit(nullptr);
 	std::set<std::string> ProjectionNames;
 }
 
@@ -60,6 +62,7 @@ void TrackingInit(){
 	TRACKING::FastKalmanFilter = new PHG4TrackFastSim("PHG4TrackFastSim");
 	TRACKING::FastKalmanFilterSiliconTrack = new PHG4TrackFastSim("FastKalmanFilterSiliconTrack");
 	TRACKING::FastKalmanFilterInnerTrack = new PHG4TrackFastSim("FastKalmanFilterInnerTrack");
+	TRACKING::g4hit = new G4HitNtuple("Hits");
 }
 
 void InitFastKalmanFilter(PHG4TrackFastSim* kalman_filter){
